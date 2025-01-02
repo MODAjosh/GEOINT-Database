@@ -1,49 +1,41 @@
 # Data Preprocessing Scripts
 
-This directory contains scripts used for transforming raw geospatial data into a format that can be analyzed. Data preprocessing is an essential step before performing any geospatial analysis, as it ensures the data is clean and ready for insights. 
+This directory contains scripts used for transforming raw geospatial data into a format that can be analyzed. Data preprocessing is an essential step before performing any geospatial analysis, as it ensures the data is clean and ready for insights.
 
 Proper data preprocessing enables better accuracy and efficiency during geospatial analysis and decision-making processes.
 
 ## Common Data Processing Tasks
-
 Here are some of the common data preprocessing tasks included in this directory:
 
-- **Shapefile to GeoJSON Conversion**: Converts shapefiles to GeoJSON for easier manipulation in web maps.
-- **Raster Reprojection**: Reprojects raster datasets to a common coordinate reference system (CRS), ensuring consistency when integrating multiple data sources.
-- **Outlier Removal**: Identifies and removes outliers from GPS or sensor data that could negatively affect analysis accuracy.
-- **Data Merging**: Merges datasets from different sources, formats, or coordinate systems into a single, cohesive dataset.
-- **Data Cleaning**: Cleans up invalid geometries, handles missing data, and prepares datasets for further analysis.
+- **Shapefile to GeoJSON Conversion:** Converts shapefiles to GeoJSON for easier manipulation in web maps.
+- **Raster Reprojection:** Reprojects raster datasets to a common coordinate reference system (CRS), ensuring consistency when integrating multiple data sources.
+- **Outlier Removal:** Identifies and removes outliers from GPS or sensor data that could negatively affect analysis accuracy.
+- **Data Merging:** Merges datasets from different sources, formats, or coordinate systems into a single, cohesive dataset.
+- **Data Cleaning:** Cleans up invalid geometries, handles missing data, and prepares datasets for further analysis.
+- **Rasterization of Vector Data:** Converts vector data (e.g., shapefiles or GeoJSON) into raster format, where each feature is represented by pixels.
 
-## Example Script: `reproject_raster.py`
+## Use Cases for Preprocessing Tools
 
-This script demonstrates how to reproject a raster file from one CRS to another. Reprojecting ensures that all datasets are in a consistent CRS, which is essential for accurate analysis and map creation.
+### 1. **Shapefile to GeoJSON Conversion**
+   - **Use Case:** When you need to upload vector data into a web map (such as Leaflet or Mapbox), GeoJSON is a widely used format. This tool ensures that shapefiles can be converted into GeoJSON for easy use in web-based applications.
+   
+### 2. **Raster Reprojection**
+   - **Use Case:** Geospatial datasets often come from different sources, and their coordinate reference systems (CRS) may not align. This tool ensures that all your raster data is reprojected into a common CRS (e.g., EPSG:4326) to enable accurate comparison and analysis.
+   
+### 3. **Outlier Removal**
+   - **Use Case:** GPS data collected from drones or mobile devices may contain noise or errors. This tool identifies and removes outliers in spatial data, ensuring that your analysis is based on clean and reliable data.
 
-### Script Explanation:
+### 4. **Data Merging**
+   - **Use Case:** When working with multiple geospatial datasets (e.g., land use, elevation, roads), data merging is needed to combine data from different formats (shapefiles, GeoJSON, etc.) and coordinate systems into a unified dataset, enabling more complex analysis.
 
-```python
-import rasterio
-from rasterio.warp import calculate_default_transform, reproject, Resampling
+### 5. **Data Cleaning**
+   - **Use Case:** Raw data can contain invalid geometries (such as overlapping polygons or empty features). Data cleaning prepares datasets by fixing errors, handling missing values, and ensuring that the data is ready for further analysis or visualization.
 
-# Input raster file
-src_file = 'raw_data/landsat_2020.tif'
-dst_file = 'processed_data/landsat_2020_reprojected.tif'
+### 6. **Rasterization of Vector Data**
+   - **Use Case:** If you need to convert vector data (e.g., building footprints, land use polygons) into raster format for spatial analysis (such as calculating distance from a point or applying a classification), this tool rasterizes the vector features, allowing for efficient analysis in a grid-based format.
 
-# Open the source raster
-with rasterio.open(src_file) as src:
-    # Define the target CRS (EPSG:4326)
-    transform, width, height = calculate_default_transform(
-        src.crs, 'EPSG:4326', src.width, src.height, *src.bounds)
-    
-    # Create the destination file with the new CRS
-    with rasterio.open(dst_file, 'w', driver='GTiff', count=src.count,
-                       dtype=src.dtypes[0], crs='EPSG:4326', transform=transform,
-                       width=width, height=height) as dst:
-        for i in range(1, src.count + 1):
-            reproject(
-                source=rasterio.band(src, i),
-                destination=rasterio.band(dst, i),
-                src_transform=src.transform,
-                src_crs=src.crs,
-                dst_transform=transform,
-                dst_crs='EPSG:4326',
-                resampling=Resampling.nearest)
+---
+License and Copyright
+This repository is made available under the MIT License. Credit must be given to Joshua Stinson when using or redistributing this repository.
+
+
