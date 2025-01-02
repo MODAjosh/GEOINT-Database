@@ -1,14 +1,20 @@
 # Processed Geospatial Data
 
-This directory contains geospatial datasets that have been pre-processed and cleaned, ready for analysis. Processed data typically includes steps like data transformation, cleaning, reformatting, and projection.
+This directory contains pre-processed and cleaned geospatial data that is ready for analysis. Preprocessing steps may include data cleaning, transformation, reformatting, and projection.
 
 ## Datasets Included:
 - **Urban Heat Island Analysis**: Processed temperature data and associated geospatial features.
-- **Topographic Maps**: Processed and aligned topographic maps for the study area.
+- **Topographic Maps**: Processed topographic map data aligned with other geospatial layers.
+
+### Example Data Files:
+- `urban_heat_islands_2021.geojson` - A GeoJSON file containing the results of an urban heat island study, processed from raw satellite thermal imagery.
+- `topographic_map_2020.shp` - Shapefile of topographic features like rivers, roads, and elevation contours.
 
 ### Important Notes:
-- All data in this directory has already undergone quality control, and any outliers or errors have been corrected.
-- Processed data is stored in formats that are ready for analysis (e.g., GeoJSON, Shapefiles).
+- Processed data is easier to use for analysis but may have some simplifications or assumptions made during the processing.
+- Ensure the projection and coordinate reference system (CRS) is consistent across datasets.
 
 ## Adding New Processed Data
-To add new processed data, ensure that the dataset is properly formatted and quality-checked. Then, upload the data and update the corresponding metadata.
+1. After processing raw data, upload the cleaned datasets to this directory.
+2. Add relevant metadata about the transformation steps in the `metadata/` folder.
+3. Document any assumptions or simplifications made during preprocessing.
