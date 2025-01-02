@@ -1,15 +1,21 @@
 # Raw Geospatial Data
 
-This directory contains the raw geospatial data used for analysis in this repository. All datasets are stored in their original format as received, before any preprocessing or transformations.
+This directory contains the raw geospatial data used for analysis in this repository. All datasets are stored in their original format as received, before any preprocessing or transformations. Raw data can be complex, but it forms the foundation of any geospatial analysis.
 
 ## Datasets Included:
-- **Satellite Imagery**: GeoTIFF files from satellite missions.
-- **Drone Survey Data**: Raw GPS and sensor data captured using drone equipment.
-- **Shapefiles**: Geospatial data for various locations in shapefile format.
-  
+- **Satellite Imagery**: GeoTIFF files from satellite missions like Landsat, Sentinel, etc.
+- **Drone Survey Data**: GPS data, LiDAR data, and camera sensor data collected using drones.
+- **Shapefiles**: Geospatial vector data (points, lines, and polygons) for various locations.
+
+### Example Data Files:
+- `landsat_2020.tif` - GeoTIFF of satellite imagery for urban area analysis.
+- `drone_gps_data.csv` - CSV file containing GPS coordinates from a drone survey.
+
 ### Important Notes:
-- Ensure that you review the metadata of each dataset before use to understand the source and collection methods.
-- Raw data should be handled carefully, and it is recommended to keep backups of these files before any processing.
+- Raw data can contain noise, missing values, or errors. Be sure to clean and preprocess this data before using it for analysis.
+- Always refer to the metadata files (in `metadata/`) for information on the data’s source, collection methods, and limitations.
 
 ## Adding New Data
-To add new data, simply upload the file(s) to this folder and ensure that the metadata is updated in the `metadata/` folder.
+1. Upload new raw geospatial datasets into this directory.
+2. Ensure that the metadata for the new datasets is created and saved in the `metadata/` folder.
+3. Follow naming conventions for consistency and ease of use.
