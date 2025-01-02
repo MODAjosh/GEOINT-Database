@@ -1,6 +1,6 @@
 # Metadata Standards and Data Collection Plan for GEOINT Projects
 
-This document outlines a comprehensive metadata framework and data collection plan for documenting and managing datasets in GEOINT workflows. 
+This document outlines a comprehensive metadata framework and data collection plan for documenting and managing datasets in GEOINT workflows.
 
 ---
 
@@ -165,6 +165,14 @@ This document outlines a comprehensive metadata framework and data collection pl
 - Record details for reproducibility:
   - Data sources, acquisition methods, preprocessing steps.
   - Metadata for each dataset.
+
+### 8. **Integration of GEOINT Layers**
+- **Imagery Layer**:
+  - Example: High-resolution satellite imagery for base mapping.
+- **Elevation Layer**:
+  - Example: DEMs for slope and terrain analysis.
+- **Intelligence Layer**:
+  - Example: Socioeconomic and environmental datasets combined for advanced analytics.
 
 ---
 
