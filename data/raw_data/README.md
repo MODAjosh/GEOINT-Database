@@ -1,5 +1,3 @@
-### **data/raw_data/README.md**
-
 # Raw Geospatial Data
 
 This directory contains the raw geospatial data used for analysis in this repository. All datasets are stored in their original format as received, before any preprocessing or transformations.
