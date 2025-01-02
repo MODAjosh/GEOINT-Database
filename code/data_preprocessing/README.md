@@ -1,21 +1,39 @@
 # Data Preprocessing Scripts
 
-This directory contains scripts used for cleaning, transforming, and preparing raw geospatial data for analysis. These scripts perform tasks such as reformatting, spatial indexing, and reprojecting geospatial data.
+This directory contains scripts used for transforming raw geospatial data into a format that can be analyzed. Data preprocessing is an essential step before performing any geospatial analysis, as it ensures the data is clean and ready for insights.
 
 ## Common Data Processing Tasks:
-- **Shapefile to GeoJSON Conversion**: Convert shapefiles to GeoJSON for easier manipulation.
-- **Raster Reprojection**: Reproject raster datasets to a common coordinate reference system.
+- **Shapefile to GeoJSON Conversion**: Convert shapefiles to GeoJSON for easier manipulation in web maps.
+- **Raster Reprojection**: Reproject raster datasets to a common coordinate reference system (CRS).
 - **Outlier Removal**: Identify and remove outliers from GPS or sensor data.
 
-### Example Processing Script
+### Example Script:
+#### `reproject_raster.py`
+This script demonstrates how to reproject a raster file from one CRS to another.
 ```python
-import geopandas as gpd
+import rasterio
+from rasterio.warp import calculate_default_transform, reproject, Resampling
 
-# Read shapefile
-shapefile = gpd.read_file('raw_data/urban_area.shp')
+# Input raster file
+src_file = 'raw_data/landsat_2020.tif'
+dst_file = 'processed_data/landsat_2020_reprojected.tif'
 
-# Reproject to EPSG:4326
-shapefile = shapefile.to_crs(epsg=4326)
-
-# Save as GeoJSON
-shapefile.to_file('processed_data/urban_area.geojson', driver='GeoJSON')
+# Open the source raster
+with rasterio.open(src_file) as src:
+    # Define the target CRS (EPSG:4326)
+    transform, width, height = calculate_default_transform(
+        src.crs, 'EPSG:4326', src.width, src.height, *src.bounds)
+    
+    # Create the destination file with the new CRS
+    with rasterio.open(dst_file, 'w', driver='GTiff', count=src.count,
+                       dtype=src.dtypes[0], crs='EPSG:4326', transform=transform,
+                       width=width, height=height) as dst:
+        for i in range(1, src.count + 1):
+            reproject(
+                source=rasterio.band(src, i),
+                destination=rasterio.band(dst, i),
+                src_transform=src.transform,
+                src_crs=src.crs,
+                dst_transform=transform,
+                dst_crs='EPSG:4326',
+                resampling=Resampling.nearest)
