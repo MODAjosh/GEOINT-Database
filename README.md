@@ -69,7 +69,7 @@ Visit the **`docs/lessons/`** and **`docs/project_guides/`** folders for step-by
 
 Before using this repository, ensure you have the following installed:
 
-- **Python 3.x**: [Download from Python's official website](https://www.python.org/)
+- **Python 3.13.1**: [Download from Python's official website](https://www.python.org/)
 - **Required Libraries**: Install the necessary dependencies by running the following command:
 
 ```bash
