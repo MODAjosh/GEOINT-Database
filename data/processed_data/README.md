@@ -46,6 +46,3 @@ This directory contains pre-processed and cleaned geospatial data, ready for ana
 
 For questions or assistance, feel free to open an issue in the repository or refer to the documentation.  
 Let’s keep building better geospatial insights! 🌍
-```
-
-This layout ensures clarity, usability, and professionalism. It also guides contributors on maintaining and documenting the processed data effectively. Let me know if you need further refinements!
