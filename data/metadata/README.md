@@ -108,6 +108,3 @@ We welcome contributions to improve metadata documentation:
 
 For questions or assistance, feel free to open an issue in the repository.  
 Happy mapping! 🌍
-```
-
-This is now fully formatted and ready to replace or enhance the `README.md` for your metadata directory in the repository. Let me know if you’d like adjustments!
