@@ -6,6 +6,40 @@ from pathlib import Path
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+def validate_raster(src):
+    """
+    Validate the input raster to ensure it contains valid data.
+
+    Parameters:
+        src (DatasetReader): Opened raster dataset.
+
+    Raises:
+        ValueError: If the raster dataset is invalid or has no bands.
+    """
+    if src.count == 0:
+        raise ValueError("The input raster has no bands. Ensure the file contains valid data.")
+
+def calculate_transform(src_crs, target_crs, width, height, bounds):
+    """
+    Calculate the transform, width, and height for the target CRS.
+
+    Parameters:
+        src_crs (CRS): Source CRS of the raster.
+        target_crs (str): Target CRS in EPSG code format.
+        width (int): Width of the source raster.
+        height (int): Height of the source raster.
+        bounds (tuple): Bounds of the source raster.
+
+    Returns:
+        tuple: (Affine transform, width, height) for the target CRS.
+    """
+    try:
+        logging.info(f"Calculating transform for target CRS: {target_crs}")
+        return calculate_default_transform(src_crs, target_crs, width, height, *bounds)
+    except Exception as e:
+        logging.error(f"Error calculating transform: {e}")
+        raise
+
 def reproject_raster(src_file, dst_file, target_crs='EPSG:4326', resampling_method=Resampling.nearest):
     """
     Reproject a raster to a target CRS and save the result.
@@ -19,12 +53,14 @@ def reproject_raster(src_file, dst_file, target_crs='EPSG:4326', resampling_meth
     try:
         logging.info(f"Opening source raster: {src_file}")
         with rasterio.open(src_file) as src:
+            # Validate the raster data
+            validate_raster(src)
+
             # Calculate transformation, width, and height for the new CRS
-            logging.info(f"Calculating transform for target CRS: {target_crs}")
-            transform, width, height = calculate_default_transform(
-                src.crs, target_crs, src.width, src.height, *src.bounds
+            transform, width, height = calculate_transform(
+                src.crs, target_crs, src.width, src.height, src.bounds
             )
-            
+
             # Create metadata for the destination file
             dst_meta = src.meta.copy()
             dst_meta.update({
@@ -42,6 +78,7 @@ def reproject_raster(src_file, dst_file, target_crs='EPSG:4326', resampling_meth
             logging.info(f"Reprojecting raster and saving to: {dst_file}")
             with rasterio.open(dst_file, 'w', **dst_meta) as dst:
                 for i in range(1, src.count + 1):
+                    logging.info(f"Reprojecting band {i} of {src.count}")
                     reproject(
                         source=rasterio.band(src, i),
                         destination=rasterio.band(dst, i),
@@ -54,8 +91,14 @@ def reproject_raster(src_file, dst_file, target_crs='EPSG:4326', resampling_meth
 
         logging.info("Reprojection completed successfully.")
 
+    except FileNotFoundError:
+        logging.error(f"File not found: {src_file}")
+    except ValueError as e:
+        logging.error(f"Validation error: {e}")
+    except rasterio.errors.RasterioIOError as e:
+        logging.error(f"Rasterio error: {e}")
     except Exception as e:
-        logging.error(f"An error occurred during reprojection: {e}")
+        logging.error(f"An unexpected error occurred during reprojection: {e}")
 
 def main():
     # Define input and output file paths
@@ -67,4 +110,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
