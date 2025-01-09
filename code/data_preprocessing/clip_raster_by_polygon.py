@@ -7,6 +7,22 @@ import logging
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+def validate_and_reproject_crs(aoi, raster_crs):
+    """
+    Validate the CRS of the AOI and reproject to match the raster CRS if necessary.
+
+    Parameters:
+        aoi (GeoDataFrame): GeoDataFrame containing the polygon(s) of interest.
+        raster_crs (CRS): The CRS of the raster file.
+
+    Returns:
+        GeoDataFrame: AOI reprojected to match the raster CRS, if necessary.
+    """
+    if aoi.crs != raster_crs:
+        logging.warning("CRS mismatch detected. Reprojecting AOI to match raster CRS.")
+        return aoi.to_crs(raster_crs)
+    return aoi
+
 def clip_raster_with_polygon(raster_file, polygon_file, output_file):
     """
     Clip a raster file using a polygon shapefile and save the result.
@@ -21,15 +37,17 @@ def clip_raster_with_polygon(raster_file, polygon_file, output_file):
         logging.info(f"Loading polygon shapefile from: {polygon_file}")
         aoi = gpd.read_file(polygon_file)
 
-        # Validate the CRS and reproject if necessary
-        logging.info("Validating CRS of the polygon and raster.")
+        # Validate AOI GeoDataFrame
+        if aoi.empty:
+            raise ValueError("The AOI shapefile is empty. Please provide a valid polygon file.")
+
+        # Validate and reproject CRS
+        logging.info("Validating and reprojecting CRS if necessary.")
         with rasterio.open(raster_file) as src:
             raster_crs = src.crs
-            if aoi.crs != raster_crs:
-                logging.info("CRS mismatch detected. Reprojecting AOI to match raster CRS.")
-                aoi = aoi.to_crs(raster_crs)
+            aoi = validate_and_reproject_crs(aoi, raster_crs)
 
-            # Convert AOI geometry to GeoJSON format for masking
+            # Convert AOI geometry to GeoJSON format
             logging.info("Converting AOI geometry to GeoJSON format.")
             geo_json = [aoi.geometry.unary_union.__geo_interface__]
 
@@ -43,7 +61,8 @@ def clip_raster_with_polygon(raster_file, polygon_file, output_file):
                 "driver": "GTiff",
                 "height": out_image.shape[1],
                 "width": out_image.shape[2],
-                "transform": out_transform
+                "transform": out_transform,
+                "nodata": src.nodata  # Preserve nodata value
             })
 
             # Ensure output directory exists
@@ -57,8 +76,14 @@ def clip_raster_with_polygon(raster_file, polygon_file, output_file):
 
         logging.info("Clipping operation completed successfully.")
 
+    except FileNotFoundError as e:
+        logging.error(f"File not found: {e}")
+    except ValueError as e:
+        logging.error(f"Validation error: {e}")
+    except rasterio.errors.RasterioIOError as e:
+        logging.error(f"Rasterio error occurred: {e}")
     except Exception as e:
-        logging.error(f"An error occurred during raster clipping: {e}")
+        logging.error(f"An unexpected error occurred during raster clipping: {e}")
 
 def main():
     # Define input and output file paths
