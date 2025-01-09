@@ -1,9 +1,32 @@
 import geopandas as gpd
 from pathlib import Path
+from pyproj import CRS
 import logging
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+def validate_and_reproject_crs(gdf):
+    """
+    Validate the CRS of a GeoDataFrame and reproject to a projected CRS if needed.
+
+    Parameters:
+        gdf (GeoDataFrame): Input GeoDataFrame.
+
+    Returns:
+        GeoDataFrame: GeoDataFrame with a projected CRS.
+    """
+    try:
+        if gdf.crs is None:
+            raise ValueError("The input vector file has no CRS defined. Define a CRS for accurate buffering.")
+
+        if not gdf.crs.is_projected:
+            logging.warning("The CRS is not projected. Reprojecting to EPSG:3857 (Web Mercator) for accurate buffering.")
+            gdf = gdf.to_crs(epsg=3857)
+        return gdf
+    except Exception as e:
+        logging.error(f"Error validating CRS: {e}")
+        raise
 
 def create_buffered_geometries(vector_file, output_file, buffer_distance=500):
     """
@@ -19,11 +42,8 @@ def create_buffered_geometries(vector_file, output_file, buffer_distance=500):
         logging.info(f"Loading vector data from: {vector_file}")
         gdf = gpd.read_file(vector_file)
 
-        # Check CRS validity and warn if units are not metric
-        if gdf.crs is None:
-            raise ValueError("The input vector file has no CRS defined. Define a CRS for accurate buffering.")
-        if not gdf.crs.is_projected:
-            logging.warning("The CRS is not projected. Buffer distance will be interpreted in degrees.")
+        # Validate and reproject CRS if needed
+        gdf = validate_and_reproject_crs(gdf)
 
         # Create a buffer around each geometry
         logging.info(f"Creating a buffer of {buffer_distance} units around each geometry.")
@@ -36,14 +56,18 @@ def create_buffered_geometries(vector_file, output_file, buffer_distance=500):
             crs=gdf.crs  # Retain the original CRS
         )
 
-        # Save the buffered geometries to a new file
+        # Ensure output directory exists
         output_dir = Path(output_file).parent
         output_dir.mkdir(parents=True, exist_ok=True)
+
+        # Save the buffered geometries to a new file
         logging.info(f"Saving buffered geometries to: {output_file}")
         buffered_gdf.to_file(output_file)
 
         logging.info("Buffering completed and file saved successfully.")
 
+    except FileNotFoundError:
+        logging.error(f"The input file does not exist: {vector_file}")
     except Exception as e:
         logging.error(f"An error occurred: {e}")
 
