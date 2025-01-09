@@ -35,9 +35,15 @@ def clip_shapefile_by_polygon(shapefile_to_clip, clip_polygon_file, output_file)
         logging.info(f"Loading shapefile to clip: {shapefile_to_clip}")
         gdf_to_clip = gpd.read_file(shapefile_to_clip)
 
+        if gdf_to_clip.empty:
+            raise ValueError("The shapefile to clip is empty. Please provide a valid shapefile.")
+
         # Load the clipping polygon
         logging.info(f"Loading clipping polygon from: {clip_polygon_file}")
         clip_polygon = gpd.read_file(clip_polygon_file)
+
+        if clip_polygon.empty:
+            raise ValueError("The clipping polygon shapefile is empty. Please provide a valid polygon shapefile.")
 
         # Validate and align CRS
         logging.info("Validating and aligning CRS.")
@@ -47,6 +53,9 @@ def clip_shapefile_by_polygon(shapefile_to_clip, clip_polygon_file, output_file)
         logging.info("Performing the clipping operation.")
         clip_geometry = clip_polygon.geometry.unary_union
         clipped_gdf = gdf_to_clip[gdf_to_clip.geometry.intersects(clip_geometry)]
+
+        if clipped_gdf.empty:
+            logging.warning("No geometries from the shapefile intersect with the clipping polygon.")
 
         # Ensure the output directory exists
         output_dir = Path(output_file).parent
