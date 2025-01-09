@@ -4,6 +4,7 @@ rasterio==1.3.8     # Latest minor update with bug fixes and enhancements
 shapely==2.0.1      # Updated to Shapely 2.x, introducing new features like vectorized operations
 gdal==3.7.0         # Updated for better support of newer raster/vector formats
 pyproj==3.6.0       # Updated for improved CRS support and transformations
+fiona==1.9.4        # Updated for compatibility with GDAL and Geopandas
 
 # Data analysis and manipulation
 pandas==2.0.3       # Latest stable release with enhancements and performance improvements
@@ -12,9 +13,9 @@ numpy==1.25.0       # Updated to ensure compatibility with other updated librari
 # Visualization libraries
 matplotlib==3.8.0   # Updated for additional plotting functionality and fixes
 seaborn==0.13.0     # Latest version, supporting newer pandas and matplotlib features
+folium==0.13.0      # Interactive map visualizations (optional)
 
 # Other utilities
 scikit-learn==1.4.1 # Updated to the latest stable version for machine learning tasks
 requests==2.31.0    # Updated for enhanced HTTP request handling and security fixes
-fiona==1.9.4        # Updated for compatibility with GDAL and Geopandas
-
+geopy==2.2.0        # For geodesic distance calculations
