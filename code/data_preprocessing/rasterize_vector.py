@@ -1,12 +1,56 @@
 import geopandas as gpd
 import rasterio
-from rasterio.features import geometry_mask
+from rasterio.features import rasterize
 import numpy as np
 import logging
 from pathlib import Path
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+def validate_and_reproject_vector(gdf, target_crs):
+    """
+    Validate and reproject a GeoDataFrame to match the target CRS.
+
+    Parameters:
+        gdf (GeoDataFrame): Input GeoDataFrame.
+        target_crs (CRS): Target CRS to align with.
+
+    Returns:
+        GeoDataFrame: GeoDataFrame reprojected to the target CRS if necessary.
+    """
+    if gdf.crs != target_crs:
+        logging.info("CRS mismatch detected. Reprojecting vector data to match raster CRS.")
+        return gdf.to_crs(target_crs)
+    return gdf
+
+def rasterize_vector(vector_gdf, transform, out_shape, dtype=np.uint8, invert=False):
+    """
+    Rasterize a GeoDataFrame into a numpy array.
+
+    Parameters:
+        vector_gdf (GeoDataFrame): Input vector data.
+        transform (Affine): Affine transformation matrix of the output raster.
+        out_shape (tuple): Shape of the output raster (height, width).
+        dtype (numpy dtype): Data type of the output raster.
+        invert (bool): Whether to invert the rasterized values (default: False).
+
+    Returns:
+        ndarray: Rasterized numpy array.
+    """
+    try:
+        logging.info("Rasterizing vector data.")
+        return rasterize(
+            [(geom, 1) for geom in vector_gdf.geometry],
+            out_shape=out_shape,
+            transform=transform,
+            fill=0,
+            all_touched=True,
+            dtype=dtype
+        )
+    except Exception as e:
+        logging.error(f"Error during rasterization: {e}")
+        raise
 
 def rasterize_vector_to_raster(vector_file, raster_file, output_raster):
     """
@@ -29,19 +73,11 @@ def rasterize_vector_to_raster(vector_file, raster_file, output_raster):
             crs = src.crs
             dtype = np.uint8
 
-        # Check CRS compatibility
-        if gdf.crs != crs:
-            logging.info("CRS mismatch detected. Reprojecting vector data to match raster CRS.")
-            gdf = gdf.to_crs(crs)
+        # Validate and reproject vector data CRS
+        gdf = validate_and_reproject_vector(gdf, crs)
 
-        # Create rasterized mask
-        logging.info("Rasterizing vector data.")
-        mask = geometry_mask(
-            [geometry for geometry in gdf.geometry],
-            transform=transform,
-            invert=True,
-            out_shape=out_shape
-        )
+        # Rasterize vector data
+        rasterized_data = rasterize_vector(gdf, transform, out_shape, dtype=dtype)
 
         # Ensure output directory exists
         output_dir = Path(output_raster).parent
@@ -60,12 +96,16 @@ def rasterize_vector_to_raster(vector_file, raster_file, output_raster):
             width=out_shape[1],
             height=out_shape[0]
         ) as dest:
-            dest.write(mask.astype(dtype), 1)
+            dest.write(rasterized_data, 1)
 
         logging.info("Rasterization completed successfully.")
 
+    except FileNotFoundError as e:
+        logging.error(f"File not found: {e}")
+    except ValueError as e:
+        logging.error(f"Validation error: {e}")
     except Exception as e:
-        logging.error(f"An error occurred during rasterization: {e}")
+        logging.error(f"An unexpected error occurred during rasterization: {e}")
 
 def main():
     # File paths
