@@ -100,6 +100,54 @@ For more detailed information on specific tools and scripts, please refer to the
 
 - [Geodesic Distance Calculation and Visualization](code/analysis_tools/Geodesic_Distance_Calculation_and_Visualisation.md)
 
+## Troubleshooting
+
+### 1. **ModuleNotFoundError**
+
+   **Problem**: This error occurs when a required Python module is not installed.
+
+   **Solution**: Ensure all dependencies are installed by running:
+
+   ```bash
+   pip install -r code/analysis_tools/requirements.txt
+   ```
+
+   If the error persists, verify that the module mentioned is included in the `requirements.txt` file and that you are using the correct Python environment.
+
+### 2. **Permission Denied Error**
+
+   **Problem**: You may encounter permission issues when running scripts or accessing files, especially on Linux or macOS.
+
+   **Solution**: Ensure you have the appropriate permissions for the files and directories involved. You can change permissions using:
+
+   ```bash
+   chmod +x <filename>
+   ```
+
+   Alternatively, you may need to run the command as an administrator (or `sudo` on Unix-like systems).
+
+### 3. **Invalid File Format**
+
+   **Problem**: If you receive errors indicating invalid file formats (e.g., for shapefiles or GeoTIFFs), ensure the input data is in the correct format.
+
+   **Solution**: Verify the format of the input files and ensure they match the expected formats. If converting files, you can use tools like GDAL or QGIS to reformat the files.
+
+### 4. **Script Execution Error**
+
+   **Problem**: If a script fails to execute, check the error message for details on the issue. Common issues include incorrect file paths or missing dependencies.
+
+   **Solution**: Double-check the paths to your input files and ensure all required dependencies are installed. Review the error message to pinpoint the specific issue, and refer to the script documentation or community forums for help.
+
+### 5. **UI Program Not Launching**
+
+   **Problem**: The user interface program may fail to launch due to missing libraries or incorrect Python versions.
+
+   **Solution**: Ensure you have the necessary GUI libraries installed (e.g., Tkinter, PyQt). You may need to install them separately if they aren't included by default in your Python environment.
+
+   ```bash
+   pip install tk
+   ```
+
 ## Contributing
 
 If you'd like to contribute to this project, please fork the repository and submit a pull request with your changes.
@@ -107,3 +155,13 @@ If you'd like to contribute to this project, please fork the repository and subm
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+```
+
+### The **Troubleshooting** section includes:
+- **ModuleNotFoundError**: How to solve issues with missing dependencies.
+- **Permission Denied Error**: Fixes for permission-related problems.
+- **Invalid File Format**: Suggestions for verifying input file formats.
+- **Script Execution Error**: Guidelines to identify and resolve errors during script execution.
+- **UI Program Not Launching**: Steps for resolving issues with launching the UI program.
+
+Feel free to modify or add more troubleshooting tips based on common issues users may face!A
