@@ -155,13 +155,3 @@ If you'd like to contribute to this project, please fork the repository and subm
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-```
-
-### The **Troubleshooting** section includes:
-- **ModuleNotFoundError**: How to solve issues with missing dependencies.
-- **Permission Denied Error**: Fixes for permission-related problems.
-- **Invalid File Format**: Suggestions for verifying input file formats.
-- **Script Execution Error**: Guidelines to identify and resolve errors during script execution.
-- **UI Program Not Launching**: Steps for resolving issues with launching the UI program.
-
-Feel free to modify or add more troubleshooting tips based on common issues users may face!A
