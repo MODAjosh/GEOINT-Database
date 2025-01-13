@@ -1,128 +1,109 @@
-# Geospatial Analysis Tools and Preprocessing Scripts
+# GEOINT-Code-Repository
 
-This repository contains a comprehensive collection of Python tools for geospatial data analysis and preprocessing. These tools are designed for professionals in Geospatial Intelligence (GEOINT) and related fields, enabling efficient handling of geospatial datasets for analysis, decision-making, and insights.
+This repository contains a collection of tools and scripts for geospatial data analysis and preprocessing. It is designed to assist in the manipulation, analysis, and visualization of geospatial data, with a focus on raster and vector data processing, geospatial analysis, and data preprocessing using Python.
 
----
+## Directory Structure
 
-## Features
+The project is organized into the following main directories:
 
-### Geospatial Analysis Tools
-These tools perform advanced geospatial analyses, including:
-- **Buffer Zone Creation**: Identify areas affected by incidents or zones requiring protection.
-- **Distance Calculations**: Determine distances between features for logistics, disaster response, or planning.
-- **Overlay Analysis**: Combine datasets to identify risks, patterns, or opportunities (e.g., heat islands, biodiversity threats).
-- **Slope Calculation**: Assess terrain stability for agriculture, construction, or disaster management.
-- **NDVI (Normalized Difference Vegetation Index)**: Monitor vegetation health for agriculture or forestry applications.
-- **Raster Clipping**: Focus analysis on specific regions of interest (e.g., cities, parks).
-- **Geospatial Statistics Extraction**: Derive insights from raster datasets, such as average land cover or temperature.
+- **UI_Program/**: Contains the user interface program for running and interacting with the geospatial scripts.
+    - `script_runner_UI.Vr.003.py`: Main script for running the UI program.
 
-### Data Preprocessing Scripts
-Preprocessing ensures raw geospatial data is clean and ready for analysis. Tasks include:
-- **Shapefile to GeoJSON Conversion**: Prepare data for web maps and modern tools.
-- **Raster Reprojection**: Align data from different sources into a common CRS.
-- **Outlier Removal**: Clean noisy GPS or sensor data for accurate analysis.
-- **Data Merging**: Combine datasets into a single, cohesive format.
-- **Data Cleaning**: Fix invalid geometries and handle missing data.
-- **Rasterization of Vector Data**: Convert vector datasets into raster format for grid-based spatial analysis.
+- **analysis_tools/**: Contains various Python scripts for performing geospatial analysis.
+    - `buffer_analysis.py`: Script for performing buffer analysis on spatial data.
+    - `calculate_buffer_zone.py`: Computes buffer zones for given geometries.
+    - `calculate_centroid.py`: Calculates the centroid of a given spatial feature.
+    - `calculate_distance.py`: Calculates the distance between spatial features.
+    - `calculate_slope.py`: Computes the slope of a raster dataset.
+    - `clip_raster_by_shapefile.py`: Clips a raster dataset using a shapefile.
+    - `extract_statistics.py`: Extracts statistics from geospatial data.
+    - `ndvi_calculation.py`: Calculates NDVI (Normalized Difference Vegetation Index) from remote sensing data.
+    - `perform_geospatial_analysis.py`: Main script to perform various geospatial analysis tasks.
+    - `requirements.txt`: Lists the required Python packages for the analysis tools.
+    - `spatial_join.py`: Performs spatial join operations on spatial datasets.
+    - `Geodesic_Distance_Calculation_and_Visualisation.md`: Documentation for geodesic distance calculations and visualization.
 
----
-
-## Common Use Cases
-
-### Analysis Tools
-1. **Urban Planning**: Create buffer zones around critical infrastructure to assess impact zones.
-2. **Agriculture**: Monitor crop health using NDVI or calculate slopes for water drainage.
-3. **Disaster Management**: Analyze distances between affected areas and rescue teams or assess vegetation loss after wildfires.
-4. **Environmental Monitoring**: Overlay protected areas with deforestation data to identify conservation priorities.
-
-### Preprocessing Scripts
-1. **Web Mapping**: Convert shapefiles to GeoJSON for use in applications like Leaflet or Mapbox.
-2. **Dataset Integration**: Reproject raster data to ensure consistency across multiple datasets.
-3. **Sensor Data Cleaning**: Remove GPS or sensor noise for drone-based mapping and analysis.
-4. **Raster Analysis**: Rasterize vector data for use in classification or proximity calculations.
-
----
+- **data_preprocessing/**: Contains scripts for preprocessing geospatial data.
+    - `buffer_vector_data.py`: Preprocesses vector data to create buffers.
+    - `clip_raster_by_polygon.py`: Clips raster data by a polygon shapefile.
+    - `clip_shapefile_by_polygon.py`: Clips shapefile data by a polygon.
+    - `merge_data.py`: Merges multiple datasets.
+    - `normalize_raster.py`: Normalizes raster data.
+    - `rasterize_vector.py`: Converts vector data to raster format.
+    - `reformat_to_geotiff.py`: Converts geospatial data to GeoTIFF format.
+    - `remove_outliers.py`: Removes outliers from raster or vector data.
+    - `reproject_raster.py`: Reprojects raster data to a different coordinate reference system.
+    - `shapefile_to_geojson.py`: Converts shapefiles to GeoJSON format.
 
 ## Installation
 
-1. **Clone the Repository**:
-   ```bash
-   git clone https://github.com/your-username/GEOINT-Database.git
-   cd GEOINT-Database
-   ```
+To get started with this repository, you'll need Python and the required dependencies.
 
-2. **Install Dependencies**:
-   Use the included `requirements.txt` file to install all necessary libraries:
-   ```bash
-   pip install -r requirements.txt
-   ```
+### 1. Clone the Repository
 
----
-
-## How to Use
-
-### Running Analysis Tools
-1. Navigate to the `code/analysis_tools` folder.
-2. Choose a script that corresponds to your analysis needs (e.g., `buffer_creation.py`).
-3. Modify the script to point to your data files.
-4. Run the script to generate results.
-
-### Running Preprocessing Scripts
-1. Navigate to the `code/preprocessing` folder.
-2. Choose the appropriate preprocessing script (e.g., `convert_shapefile_to_geojson.py`).
-3. Adjust input and output file paths as needed.
-4. Execute the script to preprocess your data.
-
----
-
-## Output Files
-
-Results from the tools and scripts are saved in the following locations:
-- **Processed Data**: Cleaned and processed datasets are stored in the `processed_data/` folder.
-- **Results**: Outputs from analysis tools (e.g., maps, GeoTIFFs) are saved in the `results/` folder.
-
----
-
-## Dependencies
-
-This repository requires the following Python libraries:
-- **Geospatial Libraries**:
-  - `geopandas`
-  - `rasterio`
-  - `shapely`
-  - `pyproj`
-- **Data Analysis and Visualization**:
-  - `pandas`
-  - `numpy`
-  - `matplotlib`
-
-Install them using:
 ```bash
-pip install -r requirements.txt
+git clone https://github.com/yourusername/GEOINT-Database.git
+cd GEOINT-Database
 ```
 
----
+### 2. Install Dependencies
 
-## File Organization
+Make sure you have `pip` installed. Then, install the required Python packages by running the following command:
 
-```
-.
-├── raw_data/               # Unprocessed datasets
-├── processed_data/         # Preprocessed datasets
-├── results/                # Output files from analysis tools
-├── code/                   # Scripts for analysis and preprocessing
-│   ├── analysis_tools/     # Analysis scripts (e.g., NDVI, slope calculation)
-│   ├── preprocessing/      # Preprocessing scripts (e.g., reprojection, rasterization)
-├── requirements.txt        # Python library requirements
-└── README.md               # Documentation
+```bash
+pip install -r code/analysis_tools/requirements.txt
 ```
 
----
+## Usage
+
+### Running the Scripts
+
+The scripts are designed to be run individually, depending on the task you wish to perform. Below are some examples:
+
+1. **Buffer Analysis**
+
+   To perform buffer analysis on vector data, run:
+
+   ```bash
+   python code/analysis_tools/buffer_analysis.py
+   ```
+
+2. **Geospatial Analysis**
+
+   To perform various geospatial analyses, use the `perform_geospatial_analysis.py` script:
+
+   ```bash
+   python code/analysis_tools/perform_geospatial_analysis.py
+   ```
+
+3. **Preprocessing Raster Data**
+
+   To clip a raster file by a shapefile, run:
+
+   ```bash
+   python code/data_preprocessing/clip_raster_by_shapefile.py
+   ```
+
+### Running the UI Program
+
+To run the UI program, use the following command:
+
+```bash
+python code/UI_Program/script_runner_UI.Vr.003.py
+```
+
+This will launch the graphical user interface (GUI) that allows you to interact with the geospatial analysis tools.
+
+## Documentation
+
+For more detailed information on specific tools and scripts, please refer to the respective documentation files:
+
+- [Geodesic Distance Calculation and Visualization](code/analysis_tools/Geodesic_Distance_Calculation_and_Visualisation.md)
+
+## Contributing
+
+If you'd like to contribute to this project, please fork the repository and submit a pull request with your changes.
 
 ## License
 
-This repository is licensed under the MIT License. Please provide credit to **Joshua Stinson** when using or redistributing the tools or code in this repository.
-
----
-
-Let me know if you'd like further adjustments!
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
