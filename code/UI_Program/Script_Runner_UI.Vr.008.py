@@ -120,7 +120,7 @@ def browse_file(entry):
         entry.insert(0, file_path)
 
 # Automatically resolve paths based on the directory of this script
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = r"C:\Users\Josh\Documents\GitHub\GEOINT-Database"
 
 SCRIPTS = {
     "Buffer Analysis": {
