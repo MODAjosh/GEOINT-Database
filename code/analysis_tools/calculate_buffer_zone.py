@@ -68,20 +68,42 @@ def process_shapefile(input_file, output_file, buffer_distance=100):
         logging.info("Process completed successfully.")
     except FileNotFoundError:
         logging.error(f"Input file not found: {input_file}")
+        raise
     except Exception as e:
         logging.error(f"An unexpected error occurred: {e}")
+        raise
+
+def run_from_gui(input_file, buffer_distance, output_file):
+    """
+    Interface for running the buffer process from a GUI.
+
+    Parameters:
+        input_file (str): Path to the input shapefile.
+        buffer_distance (float): Distance for the buffer zone.
+        output_file (str): Path to save the output file with buffers.
+    """
+    try:
+        process_shapefile(input_file, output_file, buffer_distance)
+        logging.info("Process completed successfully through GUI.")
+    except Exception as e:
+        logging.error(f"Error while running from GUI: {e}")
 
 def main():
-    # Define file paths
-    input_file = 'processed_data/merged_shapefile.shp'
-    output_dir = 'processed_data'
-    output_file = os.path.join(output_dir, 'buffer_zones.gpkg')  # Save as GeoPackage
+    """
+    Main function to define file paths and execute the buffer zone process via command-line.
+    """
+    import argparse
 
-    # Ensure the output directory exists
-    Path(output_dir).mkdir(parents=True, exist_ok=True)
+    parser = argparse.ArgumentParser(description="Calculate buffer zones for a shapefile.")
+    parser.add_argument('--input', required=True, help="Path to the input shapefile")
+    parser.add_argument('--buffer', required=False, type=float, default=100, help="Buffer distance in meters (default: 100)")
+    parser.add_argument('--output', required=True, help="Path to save the output file")
+    args = parser.parse_args()
 
-    # Process the shapefile
-    process_shapefile(input_file, output_file, buffer_distance=100)
+    try:
+        process_shapefile(args.input, args.output, args.buffer)
+    except Exception as e:
+        logging.error(f"Error while running from command line: {e}")
 
 if __name__ == "__main__":
     main()

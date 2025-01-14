@@ -1,0 +1,739 @@
+Index: code/UI_Program/Script_Runner_UI.Vr.008.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import tkinter as tk\r\nfrom tkinter import messagebox, filedialog, scrolledtext, Toplevel, Label, Entry, Button\r\nimport subprocess\r\nimport os\r\n\r\n\r\n# Tooltip class for Tkinter\r\nclass ToolTip:\r\n    def __init__(self, widget, text):\r\n        self.widget = widget\r\n        self.text = text\r\n        self.tooltip = None\r\n        self.widget.bind(\"<Enter>\", self.show_tooltip)\r\n        self.widget.bind(\"<Leave>\", self.hide_tooltip)\r\n\r\n    def show_tooltip(self, event):\r\n        x = self.widget.winfo_rootx() + 10\r\n        y = self.widget.winfo_rooty() + 10\r\n        self.tooltip = Toplevel(self.widget)\r\n        self.tooltip.wm_overrideredirect(True)\r\n        self.tooltip.geometry(f\"+{x}+{y}\")\r\n        label = Label(self.tooltip, text=self.text, background=\"lightyellow\", relief=\"solid\", padx=5, pady=5)\r\n        label.pack()\r\n\r\n    def hide_tooltip(self, event):\r\n        if self.tooltip:\r\n            self.tooltip.destroy()\r\n\r\n\r\n# Function to log messages in a ScrolledText widget\r\ndef log_message(log_widget, message):\r\n    log_widget.configure(state=\"normal\")\r\n    log_widget.insert(tk.END, message + \"\\n\")\r\n    log_widget.configure(state=\"disabled\")\r\n    log_widget.yview(tk.END)\r\n\r\n\r\n# Function to validate inputs\r\ndef validate_inputs(inputs, input_types):\r\n    for key, value in inputs.items():\r\n        if not value.strip():\r\n            messagebox.showwarning(\"Validation Error\", f\"The field '{key}' cannot be empty.\")\r\n            return False\r\n        if input_types[key] == \"number\" and not value.isdigit():\r\n            messagebox.showwarning(\"Validation Error\", f\"The field '{key}' must be a number.\")\r\n            return False\r\n        if input_types[key] == \"file\" and not os.path.exists(value):\r\n            messagebox.showwarning(\"Validation Error\", f\"The file '{value}' does not exist.\")\r\n            return False\r\n    return True\r\n\r\n\r\n# Function to run a script\r\ndef run_script(script_name, script_info):\r\n    open_input_dialog(script_name, script_info)\r\n\r\n\r\n# Function to create a custom input dialog\r\ndef open_input_dialog(script_name, script_info):\r\n    def submit_inputs():\r\n        inputs = {field[\"label\"]: entries[field[\"label\"]].get() for field in script_info[\"inputs\"]}\r\n        if not validate_inputs(inputs, input_types):\r\n            return\r\n\r\n        log_message(log_window, f\"Inputs for {script_name}: {inputs}\")\r\n        run_script_with_inputs(script_info[\"script\"], inputs, log_window)\r\n\r\n    dialog = Toplevel(root)\r\n    dialog.title(f\"Inputs for {script_name}\")\r\n    dialog.geometry(\"590x400\")\r\n    dialog.resizable(True, True)\r\n\r\n    entries = {}\r\n    input_types = {}\r\n    for idx, field in enumerate(script_info[\"inputs\"]):\r\n        Label(dialog, text=field[\"label\"]).grid(row=idx, column=0, pady=5, padx=5, sticky=\"e\")\r\n        entry = Entry(dialog, width=30)\r\n        entry.insert(0, field.get(\"placeholder\", \"\"))\r\n        entry.grid(row=idx, column=1, pady=5, padx=5)\r\n        entries[field[\"label\"]] = entry\r\n        input_types[field[\"label\"]] = field[\"type\"]\r\n\r\n        if field[\"type\"] == \"file\":\r\n            browse_button = Button(dialog, text=\"Browse\", command=lambda e=entry: browse_file(e))\r\n            browse_button.grid(row=idx, column=2, padx=5, pady=5)\r\n\r\n        ToolTip(entry, field.get(\"tooltip\", \"\"))\r\n\r\n    log_label = Label(dialog, text=\"Execution Log\", font=(\"Helvetica\", 10, \"bold\"))\r\n    log_label.grid(row=len(script_info[\"inputs\"]), column=0, columnspan=3, pady=10)\r\n\r\n    log_window = scrolledtext.ScrolledText(dialog, wrap=tk.WORD, width=70, height=10, state=\"disabled\", bg=\"black\",\r\n                                           fg=\"white\")\r\n    log_window.grid(row=len(script_info[\"inputs\"]) + 1, column=0, columnspan=3, pady=5)\r\n\r\n    Button(dialog, text=\"Run Script\", command=submit_inputs).grid(row=len(script_info[\"inputs\"]) + 2, columnspan=3,\r\n                                                                  pady=10)\r\n\r\n\r\n# Function to execute the script with user inputs\r\ndef run_script_with_inputs(script_path, inputs, log_widget):\r\n    if not os.path.exists(script_path):\r\n        messagebox.showerror(\"Error\", f\"The script file '{script_path}' does not exist.\")\r\n        return\r\n\r\n    # Format command-line arguments to match the script's expected input\r\n    args = [\r\n        f\"--input={inputs['Input File']}\",\r\n        f\"--buffer={inputs['Buffer Distance']}\",\r\n        f\"--output={inputs['Output File']}\"\r\n    ]\r\n    command = [\"python\", script_path] + args\r\n\r\n    try:\r\n        log_message(log_widget, f\"Running command: {' '.join(command)}\")\r\n        result = subprocess.run(command, capture_output=True, text=True)\r\n\r\n        if result.stdout:\r\n            log_message(log_widget, f\"Output:\\n{result.stdout}\")\r\n        if result.stderr:\r\n            log_message(log_widget, f\"Errors:\\n{result.stderr}\")\r\n\r\n        messagebox.showinfo(\"Execution Complete\", f\"Finished running {script_path}. Check the log for details.\")\r\n    except Exception as e:\r\n        log_message(log_widget, f\"Error: {str(e)}\")\r\n        messagebox.showerror(\"Error\", f\"Failed to run script.\\n\\n{str(e)}\")\r\n\r\n# Function to open a file dialog for file selection\r\ndef browse_file(entry):\r\n    file_path = filedialog.askopenfilename(title=\"Select a File\", filetypes=[(\"All Files\", \"*.*\")])\r\n    if file_path:\r\n        entry.delete(0, tk.END)\r\n        entry.insert(0, file_path)\r\n\r\n\r\n# Automatically resolve paths based on the directory of this script\r\n<<<<<<< Updated upstream\r\n=======\r\n# Edit the below to the database location\r\n>>>>>>> Stashed changes\r\nBASE_DIR = r\"C:\\Users\\Josh\\Documents\\GitHub\\GEOINT-Database\"\r\n\r\nSCRIPTS = {\r\n    \"Buffer Analysis\": {\r\n        \"script\": os.path.join(BASE_DIR, \"code\", \"analysis_tools\", \"buffer_analysis.py\"),\r\n        \"inputs\": [\r\n            {\"label\": \"Input File\", \"placeholder\": \"input.shp\", \"type\": \"file\",\r\n             \"tooltip\": \"Select the input shapefile.\"},\r\n            {\"label\": \"Buffer Distance\", \"placeholder\": \"100\", \"type\": \"number\", \"tooltip\": \"Enter buffer distance.\"},\r\n            {\"label\": \"Output File\", \"placeholder\": \"output.gpkg\", \"type\": \"text\",\r\n             \"tooltip\": \"Specify the output GeoPackage file.\"}\r\n        ]\r\n    },\r\n    \"Calculate Centroid\": {\r\n        \"script\": os.path.join(BASE_DIR, \"code\", \"analysis_tools\", \"calculate_centroid.py\"),\r\n        \"inputs\": [\r\n            {\"label\": \"Input File\", \"placeholder\": \"input.shp\", \"type\": \"file\",\r\n             \"tooltip\": \"Select the input shapefile.\"},\r\n            {\"label\": \"Output File\", \"placeholder\": \"output_centroid.shp\", \"type\": \"text\",\r\n             \"tooltip\": \"Specify the output file.\"}\r\n        ]\r\n    },\r\n    \"Calculate Distance\": {\r\n        \"script\": os.path.join(BASE_DIR, \"code\", \"analysis_tools\", \"calculate_distance.py\"),\r\n        \"inputs\": [\r\n            {\"label\": \"Input File (Shapefile with Points)\", \"placeholder\": \"e.g., points.shp\", \"type\": \"file\"},\r\n            {\"label\": \"Index of Point A\", \"placeholder\": \"e.g., 0\", \"type\": \"number\"},\r\n            {\"label\": \"Index of Point B\", \"placeholder\": \"e.g., 1\", \"type\": \"number\"}\r\n        ]\r\n    },\r\n    \"Calculate Slope\": {\r\n        \"script\": os.path.join(BASE_DIR, \"code\", \"analysis_tools\", \"calculate_slope.py\"),\r\n        \"inputs\": [\r\n            {\"label\": \"Input Raster File\", \"placeholder\": \"e.g., dem.tif\", \"type\": \"file\"},\r\n            {\"label\": \"Output File\", \"placeholder\": \"e.g., slope.tif\", \"type\": \"text\"},\r\n            {\"label\": \"Slope Format\", \"placeholder\": \"percent, degrees, or raw\", \"type\": \"text\"}\r\n        ]\r\n    },\r\n    \"Clip Raster by Shapefile\": {\r\n        \"script\": os.path.join(BASE_DIR, \"code\", \"analysis_tools\", \"clip_raster_by_shapefile.py\"),\r\n        \"inputs\": [\r\n            {\"label\": \"Input Raster File\", \"placeholder\": \"e.g., dem.tif\", \"type\": \"file\"},\r\n            {\"label\": \"Shapefile for Clipping\", \"placeholder\": \"e.g., boundary.shp\", \"type\": \"file\"},\r\n            {\"label\": \"Output File\", \"placeholder\": \"e.g., clipped_dem.tif\", \"type\": \"text\"}\r\n        ]\r\n    },\r\n    \"Extract Statistics\": {\r\n        \"script\": os.path.join(BASE_DIR, \"code\", \"analysis_tools\", \"extract_statistics.py\"),\r\n        \"inputs\": [\r\n            {\"label\": \"Input Raster File\", \"placeholder\": \"e.g., input.tif\", \"type\": \"file\"},\r\n            {\"label\": \"Output File\", \"placeholder\": \"e.g., statistics.json\", \"type\": \"text\"}\r\n        ]\r\n    },\r\n    \"NDVI Calculation\": {\r\n        \"script\": os.path.join(BASE_DIR, \"code\", \"analysis_tools\", \"ndvi_calculation.py\"),\r\n        \"inputs\": [\r\n            {\"label\": \"Red Band File\", \"placeholder\": \"e.g., red_band.tif\", \"type\": \"file\"},\r\n            {\"label\": \"NIR Band File\", \"placeholder\": \"e.g., nir_band.tif\", \"type\": \"file\"},\r\n            {\"label\": \"Output NDVI File\", \"placeholder\": \"e.g., ndvi_output.tif\", \"type\": \"text\"}\r\n        ]\r\n    },\r\n    \"Perform Geospatial Analysis\": {\r\n        \"script\": os.path.join(BASE_DIR, \"code\", \"analysis_tools\", \"perform_geospatial_analysis.py\"),\r\n        \"inputs\": [\r\n            {\"label\": \"Input Shapefile\", \"placeholder\": \"e.g., polygons.shp\", \"type\": \"file\"},\r\n            {\"label\": \"Point Coordinates\", \"placeholder\": \"e.g., -93.244,38.871\", \"type\": \"text\"},\r\n            {\"label\": \"Output File\", \"placeholder\": \"e.g., analysis_results.shp\", \"type\": \"text\"}\r\n        ]\r\n    },\r\n    \"Spatial Join\": {\r\n        \"script\": os.path.join(BASE_DIR, \"code\", \"analysis_tools\", \"spatial_join.py\"),\r\n        \"inputs\": [\r\n            {\"label\": \"Points Shapefile\", \"placeholder\": \"e.g., points.shp\", \"type\": \"file\"},\r\n            {\"label\": \"Polygons Shapefile\", \"placeholder\": \"e.g., polygons.shp\", \"type\": \"file\"},\r\n            {\"label\": \"Output File\", \"placeholder\": \"e.g., spatial_join_results.shp\", \"type\": \"text\"}\r\n        ]\r\n    },\r\n    \"Buffer Vector Data\": {\r\n        \"script\": os.path.join(BASE_DIR, \"code\", \"data_preprocessing\", \"buffer_vector_data.py\"),\r\n        \"inputs\": [\r\n            {\"label\": \"Input Vector File\", \"placeholder\": \"e.g., input.shp\", \"type\": \"file\"},\r\n            {\"label\": \"Buffer Distance\", \"placeholder\": \"e.g., 200\", \"type\": \"number\"},\r\n            {\"label\": \"Output File\", \"placeholder\": \"e.g., buffered_output.shp\", \"type\": \"text\"}\r\n        ]\r\n    },\r\n    \"Clip Raster by Polygon\": {\r\n        \"script\": os.path.join(BASE_DIR, \"code\", \"data_preprocessing\", \"clip_raster_by_polygon.py\"),\r\n        \"inputs\": [\r\n            {\"label\": \"Input Raster File\", \"placeholder\": \"e.g., input.tif\", \"type\": \"file\"},\r\n            {\"label\": \"Polygon File\", \"placeholder\": \"e.g., polygon.shp\", \"type\": \"file\"},\r\n            {\"label\": \"Output File\", \"placeholder\": \"e.g., clipped_raster.tif\", \"type\": \"text\"}\r\n        ]\r\n    },\r\n    \"Clip Shapefile by Polygon\": {\r\n        \"script\": os.path.join(BASE_DIR, \"code\", \"data_preprocessing\", \"clip_shapefile_by_polygon.py\"),\r\n        \"inputs\": [\r\n            {\"label\": \"Input Shapefile\", \"placeholder\": \"e.g., input.shp\", \"type\": \"file\"},\r\n            {\"label\": \"Clipping Polygon\", \"placeholder\": \"e.g., clip_polygon.shp\", \"type\": \"file\"},\r\n            {\"label\": \"Output File\", \"placeholder\": \"e.g., clipped_shapefile.shp\", \"type\": \"text\"}\r\n        ]\r\n    },\r\n    \"Merge Data\": {\r\n        \"script\": os.path.join(BASE_DIR, \"code\", \"data_preprocessing\", \"merge_data.py\"),\r\n        \"inputs\": [\r\n            {\"label\": \"Input File 1\", \"placeholder\": \"e.g., file1.shp\", \"type\": \"file\"},\r\n            {\"label\": \"Input File 2\", \"placeholder\": \"e.g., file2.shp\", \"type\": \"file\"},\r\n            {\"label\": \"Output File\", \"placeholder\": \"e.g., merged_output.shp\", \"type\": \"text\"}\r\n        ]\r\n    },\r\n    \"Normalize Raster\": {\r\n        \"script\": os.path.join(BASE_DIR, \"code\", \"data_preprocessing\", \"normalize_raster.py\"),\r\n        \"inputs\": [\r\n            {\"label\": \"Input Raster File\", \"placeholder\": \"e.g., input.tif\", \"type\": \"file\"},\r\n            {\"label\": \"Output File\", \"placeholder\": \"e.g., normalized.tif\", \"type\": \"text\"}\r\n        ]\r\n    },\r\n    \"Rasterize Vector\": {\r\n        \"script\": os.path.join(BASE_DIR, \"code\", \"data_preprocessing\", \"rasterize_vector.py\"),\r\n        \"inputs\": [\r\n            {\"label\": \"Input Vector File\", \"placeholder\": \"e.g., input.shp\", \"type\": \"file\"},\r\n            {\"label\": \"Output Raster File\", \"placeholder\": \"e.g., rasterized_output.tif\", \"type\": \"text\"}\r\n        ]\r\n    },\r\n    \"Reformat to GeoTIFF\": {\r\n        \"script\": os.path.join(BASE_DIR, \"code\", \"data_preprocessing\", \"reformat_to_geotiff.py\"),\r\n        \"inputs\": [\r\n            {\"label\": \"Input File\", \"placeholder\": \"e.g., input.data\", \"type\": \"file\"},\r\n            {\"label\": \"Output GeoTIFF File\", \"placeholder\": \"e.g., output.tif\", \"type\": \"text\"}\r\n        ]\r\n    },\r\n    \"Remove Outliers\": {\r\n        \"script\": os.path.join(BASE_DIR, \"code\", \"data_preprocessing\", \"remove_outliers.py\"),\r\n        \"inputs\": [\r\n            {\"label\": \"Input Data File\", \"placeholder\": \"e.g., data.csv\", \"type\": \"file\"},\r\n            {\"label\": \"Threshold Value\", \"placeholder\": \"e.g., 1.5\", \"type\": \"number\"},\r\n            {\"label\": \"Output File\", \"placeholder\": \"e.g., cleaned_data.csv\", \"type\": \"text\"}\r\n        ]\r\n    },\r\n    \"Reproject Raster\": {\r\n        \"script\": os.path.join(BASE_DIR, \"code\", \"data_preprocessing\", \"reproject_raster.py\"),\r\n        \"inputs\": [\r\n            {\"label\": \"Input Raster File\", \"placeholder\": \"e.g., input.tif\", \"type\": \"file\"},\r\n            {\"label\": \"Target CRS\", \"placeholder\": \"e.g., EPSG:4326\", \"type\": \"text\"},\r\n            {\"label\": \"Output File\", \"placeholder\": \"e.g., reprojected_output.tif\", \"type\": \"text\"}\r\n        ]\r\n    },\r\n    \"Shapefile to GeoJSON\": {\r\n        \"script\": os.path.join(BASE_DIR, \"code\", \"data_preprocessing\", \"shapefile_to_geojson.py\"),\r\n        \"inputs\": [\r\n            {\"label\": \"Input Shapefile\", \"placeholder\": \"e.g., input.shp\", \"type\": \"file\"},\r\n            {\"label\": \"Output GeoJSON File\", \"placeholder\": \"e.g., output.geojson\", \"type\": \"text\"}\r\n        ]\r\n    }\r\n}\r\n\r\n# Initialize Tkinter\r\nroot = tk.Tk()\r\nroot.title(\"Geospatial Toolkit\")\r\nroot.geometry(\"200x750\")\r\n\r\nheader = tk.Label(root, text=\"Geospatial Toolkit\", font=(\"Helvetica\", 16), anchor=\"center\")\r\nheader.pack(pady=10)\r\n\r\ncanvas = tk.Canvas(root)\r\nscroll_y = tk.Scrollbar(root, orient=\"vertical\", command=canvas.yview)\r\nscrollable_frame = tk.Frame(canvas)\r\n\r\ncanvas.create_window((0, 0), window=scrollable_frame, anchor=\"nw\")\r\ncanvas.update_idletasks()\r\ncanvas.configure(scrollregion=canvas.bbox(\"all\"), yscrollcommand=scroll_y.set)\r\n\r\ncanvas.pack(side=\"left\", fill=\"both\", expand=True)\r\nscroll_y.pack(side=\"right\", fill=\"y\")\r\n\r\nfor script_name, script_info in SCRIPTS.items():\r\n    btn = tk.Button(scrollable_frame, text=script_name, command=lambda s=script_name: run_script(s, SCRIPTS[s]))\r\n    btn.pack(pady=5)\r\n    btn.configure(anchor=\"center\")\r\n    ToolTip(btn, f\"Click to run {script_name} analysis\")\r\n\r\nroot.mainloop()\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/code/UI_Program/Script_Runner_UI.Vr.008.py b/code/UI_Program/Script_Runner_UI.Vr.008.py
+--- a/code/UI_Program/Script_Runner_UI.Vr.008.py	(revision b981f4501786e14355a459211fed00494e2167fb)
++++ b/code/UI_Program/Script_Runner_UI.Vr.008.py	(date 1736872017560)
+@@ -3,169 +3,35 @@
+ import subprocess
+ import os
+ 
+-
+-# Tooltip class for Tkinter
+-class ToolTip:
+-    def __init__(self, widget, text):
+-        self.widget = widget
+-        self.text = text
+-        self.tooltip = None
+-        self.widget.bind("<Enter>", self.show_tooltip)
+-        self.widget.bind("<Leave>", self.hide_tooltip)
+-
+-    def show_tooltip(self, event):
+-        x = self.widget.winfo_rootx() + 10
+-        y = self.widget.winfo_rooty() + 10
+-        self.tooltip = Toplevel(self.widget)
+-        self.tooltip.wm_overrideredirect(True)
+-        self.tooltip.geometry(f"+{x}+{y}")
+-        label = Label(self.tooltip, text=self.text, background="lightyellow", relief="solid", padx=5, pady=5)
+-        label.pack()
+-
+-    def hide_tooltip(self, event):
+-        if self.tooltip:
+-            self.tooltip.destroy()
+-
+-
+-# Function to log messages in a ScrolledText widget
+-def log_message(log_widget, message):
+-    log_widget.configure(state="normal")
+-    log_widget.insert(tk.END, message + "\n")
+-    log_widget.configure(state="disabled")
+-    log_widget.yview(tk.END)
+-
+-
+-# Function to validate inputs
+-def validate_inputs(inputs, input_types):
+-    for key, value in inputs.items():
+-        if not value.strip():
+-            messagebox.showwarning("Validation Error", f"The field '{key}' cannot be empty.")
+-            return False
+-        if input_types[key] == "number" and not value.isdigit():
+-            messagebox.showwarning("Validation Error", f"The field '{key}' must be a number.")
+-            return False
+-        if input_types[key] == "file" and not os.path.exists(value):
+-            messagebox.showwarning("Validation Error", f"The file '{value}' does not exist.")
+-            return False
+-    return True
+-
+-
+-# Function to run a script
+-def run_script(script_name, script_info):
+-    open_input_dialog(script_name, script_info)
+-
+-
+-# Function to create a custom input dialog
+-def open_input_dialog(script_name, script_info):
+-    def submit_inputs():
+-        inputs = {field["label"]: entries[field["label"]].get() for field in script_info["inputs"]}
+-        if not validate_inputs(inputs, input_types):
+-            return
+-
+-        log_message(log_window, f"Inputs for {script_name}: {inputs}")
+-        run_script_with_inputs(script_info["script"], inputs, log_window)
+-
+-    dialog = Toplevel(root)
+-    dialog.title(f"Inputs for {script_name}")
+-    dialog.geometry("590x400")
+-    dialog.resizable(True, True)
+-
+-    entries = {}
+-    input_types = {}
+-    for idx, field in enumerate(script_info["inputs"]):
+-        Label(dialog, text=field["label"]).grid(row=idx, column=0, pady=5, padx=5, sticky="e")
+-        entry = Entry(dialog, width=30)
+-        entry.insert(0, field.get("placeholder", ""))
+-        entry.grid(row=idx, column=1, pady=5, padx=5)
+-        entries[field["label"]] = entry
+-        input_types[field["label"]] = field["type"]
+-
+-        if field["type"] == "file":
+-            browse_button = Button(dialog, text="Browse", command=lambda e=entry: browse_file(e))
+-            browse_button.grid(row=idx, column=2, padx=5, pady=5)
+-
+-        ToolTip(entry, field.get("tooltip", ""))
+-
+-    log_label = Label(dialog, text="Execution Log", font=("Helvetica", 10, "bold"))
+-    log_label.grid(row=len(script_info["inputs"]), column=0, columnspan=3, pady=10)
+-
+-    log_window = scrolledtext.ScrolledText(dialog, wrap=tk.WORD, width=70, height=10, state="disabled", bg="black",
+-                                           fg="white")
+-    log_window.grid(row=len(script_info["inputs"]) + 1, column=0, columnspan=3, pady=5)
+-
+-    Button(dialog, text="Run Script", command=submit_inputs).grid(row=len(script_info["inputs"]) + 2, columnspan=3,
+-                                                                  pady=10)
+-
+-
+-# Function to execute the script with user inputs
+-def run_script_with_inputs(script_path, inputs, log_widget):
+-    if not os.path.exists(script_path):
+-        messagebox.showerror("Error", f"The script file '{script_path}' does not exist.")
+-        return
+-
+-    # Format command-line arguments to match the script's expected input
+-    args = [
+-        f"--input={inputs['Input File']}",
+-        f"--buffer={inputs['Buffer Distance']}",
+-        f"--output={inputs['Output File']}"
+-    ]
+-    command = ["python", script_path] + args
+-
+-    try:
+-        log_message(log_widget, f"Running command: {' '.join(command)}")
+-        result = subprocess.run(command, capture_output=True, text=True)
+-
+-        if result.stdout:
+-            log_message(log_widget, f"Output:\n{result.stdout}")
+-        if result.stderr:
+-            log_message(log_widget, f"Errors:\n{result.stderr}")
+-
+-        messagebox.showinfo("Execution Complete", f"Finished running {script_path}. Check the log for details.")
+-    except Exception as e:
+-        log_message(log_widget, f"Error: {str(e)}")
+-        messagebox.showerror("Error", f"Failed to run script.\n\n{str(e)}")
+-
+-# Function to open a file dialog for file selection
+-def browse_file(entry):
+-    file_path = filedialog.askopenfilename(title="Select a File", filetypes=[("All Files", "*.*")])
+-    if file_path:
+-        entry.delete(0, tk.END)
+-        entry.insert(0, file_path)
+-
+-
+ # Automatically resolve paths based on the directory of this script
+-<<<<<<< Updated upstream
+-=======
+ # Edit the below to the database location
+->>>>>>> Stashed changes
+ BASE_DIR = r"C:\Users\Josh\Documents\GitHub\GEOINT-Database"
+ 
+ SCRIPTS = {
+     "Buffer Analysis": {
+         "script": os.path.join(BASE_DIR, "code", "analysis_tools", "buffer_analysis.py"),
+         "inputs": [
+-            {"label": "Input File", "placeholder": "input.shp", "type": "file",
+-             "tooltip": "Select the input shapefile."},
++            {"label": "Input File", "placeholder": "input.shp", "type": "file", "tooltip": "Select the input shapefile."},
+             {"label": "Buffer Distance", "placeholder": "100", "type": "number", "tooltip": "Enter buffer distance."},
+-            {"label": "Output File", "placeholder": "output.gpkg", "type": "text",
+-             "tooltip": "Specify the output GeoPackage file."}
++            {"label": "Output File", "placeholder": "output.shp", "type": "text", "tooltip": "Specify the output file."}
+         ]
+     },
+     "Calculate Centroid": {
+         "script": os.path.join(BASE_DIR, "code", "analysis_tools", "calculate_centroid.py"),
+         "inputs": [
+-            {"label": "Input File", "placeholder": "input.shp", "type": "file",
+-             "tooltip": "Select the input shapefile."},
+-            {"label": "Output File", "placeholder": "output_centroid.shp", "type": "text",
+-             "tooltip": "Specify the output file."}
++            {"label": "Input File", "placeholder": "input.shp", "type": "file", "tooltip": "Select the input shapefile."},
++            {"label": "Output File", "placeholder": "output_centroid.shp", "type": "text", "tooltip": "Specify the output file."}
+         ]
+     },
+     "Calculate Distance": {
+         "script": os.path.join(BASE_DIR, "code", "analysis_tools", "calculate_distance.py"),
+         "inputs": [
+-            {"label": "Input File (Shapefile with Points)", "placeholder": "e.g., points.shp", "type": "file"},
+-            {"label": "Index of Point A", "placeholder": "e.g., 0", "type": "number"},
+-            {"label": "Index of Point B", "placeholder": "e.g., 1", "type": "number"}
++            {"label": "Input File (Shapefile with Points)", "placeholder": "e.g., points.shp", "type": "file",
++             "tooltip": "Select the shapefile with points."},
++            {"label": "Index of Point A", "placeholder": "e.g., 0", "type": "number",
++             "tooltip": "Index of the first point."},
++            {"label": "Index of Point B", "placeholder": "e.g., 1", "type": "number",
++             "tooltip": "Index of the second point."}
+         ]
+     },
+     "Calculate Slope": {
+@@ -293,6 +159,133 @@
+     }
+ }
+ 
++# Tooltip class for Tkinter
++class ToolTip:
++    def __init__(self, widget, text):
++        self.widget = widget
++        self.text = text
++        self.tooltip = None
++        self.widget.bind("<Enter>", self.show_tooltip)
++        self.widget.bind("<Leave>", self.hide_tooltip)
++
++    def show_tooltip(self, event):
++        x = self.widget.winfo_rootx() + 10
++        y = self.widget.winfo_rooty() + 10
++        self.tooltip = Toplevel(self.widget)
++        self.tooltip.wm_overrideredirect(True)
++        self.tooltip.geometry(f"+{x}+{y}")
++        label = Label(self.tooltip, text=self.text, background="lightyellow", relief="solid", padx=5, pady=5)
++        label.pack()
++
++    def hide_tooltip(self, event):
++        if self.tooltip:
++            self.tooltip.destroy()
++
++# Function to log messages in a ScrolledText widget
++def log_message(log_widget, message):
++    log_widget.configure(state="normal")
++    log_widget.insert(tk.END, message + "\n")
++    log_widget.configure(state="disabled")
++    log_widget.yview(tk.END)
++
++# Function to validate inputs
++def validate_inputs(inputs, input_types):
++    for key, value in inputs.items():
++        if not value.strip():
++            messagebox.showwarning("Validation Error", f"The field '{key}' cannot be empty.")
++            return False
++        if input_types[key] == "number":
++            try:
++                float(value)  # Ensure the value is a valid number
++            except ValueError:
++                messagebox.showwarning("Validation Error", f"The field '{key}' must be a valid number.")
++                return False
++        if input_types[key] == "file" and not os.path.exists(value):
++            messagebox.showwarning("Validation Error", f"The file '{value}' does not exist.")
++            return False
++    return True
++
++# Function to run a script
++def run_script(script_name, script_info):
++    open_input_dialog(script_name, script_info)
++
++# Function to create a custom input dialog
++def open_input_dialog(script_name, script_info):
++    def submit_inputs():
++        inputs = {field["label"]: entries[field["label"]].get() for field in script_info["inputs"]}
++        if not validate_inputs(inputs, input_types):
++            return
++
++        log_message(log_window, f"Inputs for {script_name}: {inputs}")
++        run_script_with_inputs(script_info["script"], inputs, log_window)
++
++    dialog = Toplevel(root)
++    dialog.title(f"Inputs for {script_name}")
++    dialog.geometry("590x400")
++    dialog.resizable(True, True)
++
++    entries = {}
++    input_types = {}
++    for idx, field in enumerate(script_info["inputs"]):
++        Label(dialog, text=field["label"]).grid(row=idx, column=0, pady=5, padx=5, sticky="e")
++        entry = Entry(dialog, width=30)
++        entry.insert(0, field.get("placeholder", ""))
++        entry.grid(row=idx, column=1, pady=5, padx=5)
++        entries[field["label"]] = entry
++        input_types[field["label"]] = field["type"]
++
++        if field["type"] == "file":
++            browse_button = Button(dialog, text="Browse", command=lambda e=entry: browse_file(e))
++            browse_button.grid(row=idx, column=2, padx=5, pady=5)
++
++        ToolTip(entry, field.get("tooltip", ""))
++
++    log_label = Label(dialog, text="Execution Log", font=("Helvetica", 10, "bold"))
++    log_label.grid(row=len(script_info["inputs"]), column=0, columnspan=3, pady=10)
++
++    log_window = scrolledtext.ScrolledText(dialog, wrap=tk.WORD, width=70, height=10, state="disabled", bg="black",
++                                           fg="white")
++    log_window.grid(row=len(script_info["inputs"]) + 1, column=0, columnspan=3, pady=5)
++
++    Button(dialog, text="Run Script", command=submit_inputs).grid(row=len(script_info["inputs"]) + 2, columnspan=3,
++                                                                  pady=10)
++
++# Function to execute the script with user inputs
++def run_script_with_inputs(script_path, inputs, log_widget):
++    if not os.path.exists(script_path):
++        messagebox.showerror("Error", f"The script file '{script_path}' does not exist.")
++        return
++
++    # Map input labels to CLI arguments
++    args = [
++        f"--input={inputs.get('Input File (Shapefile with Points)', '')}",
++        f"--index1={inputs.get('Index of Point A', '')}",
++        f"--index2={inputs.get('Index of Point B', '')}"
++    ]
++    command = ["python", script_path] + args
++
++    try:
++        log_message(log_widget, f"Running command: {' '.join(command)}")
++        result = subprocess.run(command, capture_output=True, text=True)
++
++        if result.stdout:
++            log_message(log_widget, f"Output:\n{result.stdout}")
++        if result.stderr:
++            log_message(log_widget, f"Errors:\n{result.stderr}")
++
++        messagebox.showinfo("Execution Complete", f"Finished running {script_path}. Check the log for details.")
++    except Exception as e:
++        log_message(log_widget, f"Error: {str(e)}")
++        messagebox.showerror("Error", f"Failed to run script.\n\n{str(e)}")
++
++
++# Function to open a file dialog for file selection
++def browse_file(entry):
++    file_path = filedialog.askopenfilename(title="Select a File", filetypes=[("All Files", "*.*")])
++    if file_path:
++        entry.delete(0, tk.END)
++        entry.insert(0, file_path)
++
+ # Initialize Tkinter
+ root = tk.Tk()
+ root.title("Geospatial Toolkit")
+Index: code/analysis_tools/calculate_buffer_zone.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import os\r\nimport geopandas as gpd\r\nfrom pathlib import Path\r\nfrom pyproj import CRS\r\nimport logging\r\n\r\n# Configure logging\r\nlogging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')\r\n\r\ndef ensure_crs_in_meters(gdf):\r\n    \"\"\"\r\n    Ensures the GeoDataFrame's CRS is in meters. Reprojects if necessary.\r\n\r\n    Parameters:\r\n        gdf (GeoDataFrame): The input GeoDataFrame.\r\n\r\n    Returns:\r\n        GeoDataFrame: A GeoDataFrame with a CRS in meters.\r\n    \"\"\"\r\n    if gdf.crs is None:\r\n        raise ValueError(\"Input file does not have a defined CRS.\")\r\n\r\n    crs = CRS.from_user_input(gdf.crs)\r\n    if not crs.is_projected or crs.axis_info[0].unit_name != 'metre':\r\n        logging.warning(\"CRS is not in meters. Reprojecting to EPSG:3857 (Web Mercator).\")\r\n        gdf = gdf.to_crs(epsg=3857)\r\n    return gdf\r\n\r\ndef calculate_buffer(gdf, buffer_distance):\r\n    \"\"\"\r\n    Calculates buffer zones around geometries.\r\n\r\n    Parameters:\r\n        gdf (GeoDataFrame): The input GeoDataFrame.\r\n        buffer_distance (float): Distance for the buffer zone.\r\n\r\n    Returns:\r\n        GeoDataFrame: A GeoDataFrame with buffered geometries.\r\n    \"\"\"\r\n    logging.info(f\"Creating buffer zones with a distance of {buffer_distance} meters.\")\r\n    gdf['geometry'] = gdf.geometry.buffer(buffer_distance)\r\n    return gdf\r\n\r\ndef process_shapefile(input_file, output_file, buffer_distance=100):\r\n    \"\"\"\r\n    Loads a shapefile, calculates buffer zones, and saves the result.\r\n\r\n    Parameters:\r\n        input_file (str): Path to the input shapefile.\r\n        output_file (str): Path to save the output file with buffers.\r\n        buffer_distance (float): Distance for the buffer zone (default: 100 meters).\r\n    \"\"\"\r\n    try:\r\n        # Load geospatial data\r\n        logging.info(f\"Loading input file: {input_file}\")\r\n        gdf = gpd.read_file(input_file)\r\n\r\n        # Ensure CRS is in meters\r\n        gdf = ensure_crs_in_meters(gdf)\r\n\r\n        # Calculate buffer zones\r\n        gdf = calculate_buffer(gdf, buffer_distance)\r\n\r\n        # Save the buffered geometries\r\n        logging.info(f\"Saving output to: {output_file}\")\r\n        gdf.to_file(output_file, driver=\"GPKG\")  # GeoPackage format\r\n\r\n        logging.info(\"Process completed successfully.\")\r\n    except FileNotFoundError:\r\n        logging.error(f\"Input file not found: {input_file}\")\r\n    except Exception as e:\r\n        logging.error(f\"An unexpected error occurred: {e}\")\r\n\r\ndef main():\r\n    # Define file paths\r\n    input_file = 'processed_data/merged_shapefile.shp'\r\n    output_dir = 'processed_data'\r\n    output_file = os.path.join(output_dir, 'buffer_zones.gpkg')  # Save as GeoPackage\r\n\r\n    # Ensure the output directory exists\r\n    Path(output_dir).mkdir(parents=True, exist_ok=True)\r\n\r\n    # Process the shapefile\r\n    process_shapefile(input_file, output_file, buffer_distance=100)\r\n\r\nif __name__ == \"__main__\":\r\n    main()\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/code/analysis_tools/calculate_buffer_zone.py b/code/analysis_tools/calculate_buffer_zone.py
+--- a/code/analysis_tools/calculate_buffer_zone.py	(revision b981f4501786e14355a459211fed00494e2167fb)
++++ b/code/analysis_tools/calculate_buffer_zone.py	(date 1736869475484)
+@@ -68,20 +68,42 @@
+         logging.info("Process completed successfully.")
+     except FileNotFoundError:
+         logging.error(f"Input file not found: {input_file}")
++        raise
+     except Exception as e:
+         logging.error(f"An unexpected error occurred: {e}")
++        raise
++
++def run_from_gui(input_file, buffer_distance, output_file):
++    """
++    Interface for running the buffer process from a GUI.
++
++    Parameters:
++        input_file (str): Path to the input shapefile.
++        buffer_distance (float): Distance for the buffer zone.
++        output_file (str): Path to save the output file with buffers.
++    """
++    try:
++        process_shapefile(input_file, output_file, buffer_distance)
++        logging.info("Process completed successfully through GUI.")
++    except Exception as e:
++        logging.error(f"Error while running from GUI: {e}")
+ 
+ def main():
+-    # Define file paths
+-    input_file = 'processed_data/merged_shapefile.shp'
+-    output_dir = 'processed_data'
+-    output_file = os.path.join(output_dir, 'buffer_zones.gpkg')  # Save as GeoPackage
++    """
++    Main function to define file paths and execute the buffer zone process via command-line.
++    """
++    import argparse
+ 
+-    # Ensure the output directory exists
+-    Path(output_dir).mkdir(parents=True, exist_ok=True)
++    parser = argparse.ArgumentParser(description="Calculate buffer zones for a shapefile.")
++    parser.add_argument('--input', required=True, help="Path to the input shapefile")
++    parser.add_argument('--buffer', required=False, type=float, default=100, help="Buffer distance in meters (default: 100)")
++    parser.add_argument('--output', required=True, help="Path to save the output file")
++    args = parser.parse_args()
+ 
+-    # Process the shapefile
+-    process_shapefile(input_file, output_file, buffer_distance=100)
++    try:
++        process_shapefile(args.input, args.output, args.buffer)
++    except Exception as e:
++        logging.error(f"Error while running from command line: {e}")
+ 
+ if __name__ == "__main__":
+     main()
+Index: code/analysis_tools/buffer_analysis.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import os\r\nimport argparse\r\nimport geopandas as gpd\r\nfrom pathlib import Path\r\nfrom pyproj import CRS\r\nimport logging\r\n\r\n# Configure logging\r\nlogging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')\r\n\r\n\r\ndef ensure_crs_in_meters(gdf):\r\n    \"\"\"\r\n    Ensures the GeoDataFrame has a CRS in meters. Reprojects if necessary.\r\n    :param gdf: GeoDataFrame\r\n    :return: GeoDataFrame with CRS in meters\r\n    \"\"\"\r\n    if gdf.crs is None:\r\n        raise ValueError(\"The GeoDataFrame does not have a defined CRS.\")\r\n\r\n    crs = CRS.from_user_input(gdf.crs)\r\n    if not crs.is_projected or crs.axis_info[0].unit_name != 'metre':\r\n        logging.warning(\"CRS is not in meters. Reprojecting to EPSG:3857.\")\r\n        gdf = gdf.to_crs(epsg=3857)\r\n    return gdf\r\n\r\n\r\ndef create_buffer(gdf, distance):\r\n    \"\"\"\r\n    Creates a buffer around the geometries in the GeoDataFrame.\r\n    :param gdf: GeoDataFrame\r\n    :param distance: Buffer distance in meters\r\n    :return: GeoDataFrame with buffered geometries\r\n    \"\"\"\r\n    logging.info(f\"Buffering geometries with a {distance}-meter buffer.\")\r\n    gdf['geometry'] = gdf.geometry.buffer(distance)\r\n    return gdf\r\n\r\n\r\ndef main():\r\n    \"\"\"\r\n    Main function to load a shapefile, buffer geometries, and save the result.\r\n    \"\"\"\r\n    # Parse command-line arguments\r\n    parser = argparse.ArgumentParser(description=\"Buffer geometries in a shapefile.\")\r\n    parser.add_argument('--input', required=True, help=\"Path to the input shapefile\")\r\n    parser.add_argument('--buffer', required=True, type=float, help=\"Buffer distance in meters\")\r\n    parser.add_argument('--output', required=True, help=\"Path to save the output file\")\r\n    args = parser.parse_args()\r\n\r\n    input_file = args.input\r\n    buffer_distance = args.buffer\r\n    output_file = args.output\r\n\r\n    # Ensure the input file exists\r\n    if not os.path.exists(input_file):\r\n        logging.error(f\"Input file does not exist: {input_file}\")\r\n        return\r\n\r\n    try:\r\n        # Load geospatial data\r\n        logging.info(f\"Loading shapefile from: {input_file}\")\r\n        gdf = gpd.read_file(input_file)\r\n\r\n        # Ensure CRS is in meters or reproject if needed\r\n        gdf = ensure_crs_in_meters(gdf)\r\n\r\n        # Create the buffer\r\n        gdf = create_buffer(gdf, buffer_distance)\r\n\r\n        # Ensure output directory exists\r\n        output_dir = os.path.dirname(output_file)\r\n        Path(output_dir).mkdir(parents=True, exist_ok=True)\r\n\r\n        # Save the resulting buffered geometries\r\n        logging.info(f\"Saving buffered geometries to: {output_file}\")\r\n        gdf.to_file(output_file, driver='GPKG')\r\n\r\n        logging.info(\"Process completed successfully.\")\r\n    except Exception as e:\r\n        logging.error(f\"An error occurred: {e}\", exc_info=True)\r\n\r\n\r\nif __name__ == \"__main__\":\r\n    main()\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/code/analysis_tools/buffer_analysis.py b/code/analysis_tools/buffer_analysis.py
+--- a/code/analysis_tools/buffer_analysis.py	(revision b981f4501786e14355a459211fed00494e2167fb)
++++ b/code/analysis_tools/buffer_analysis.py	(date 1736869020180)
+@@ -8,6 +8,11 @@
+ # Configure logging
+ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+ 
++# Define the processed data directory
++# Note: Update this path for different environments or users
++PROCESSED_DATA_DIR = r"C:\Users\Josh\Documents\GitHub\GEOINT-Database\data\processed_data"
++Path(PROCESSED_DATA_DIR).mkdir(parents=True, exist_ok=True)
++
+ 
+ def ensure_crs_in_meters(gdf):
+     """
+@@ -37,46 +42,42 @@
+     return gdf
+ 
+ 
+-def main():
++def run_buffer_analysis(input_file, buffer_distance, output_file_name):
+     """
+-    Main function to load a shapefile, buffer geometries, and save the result.
++    Executes the buffer analysis process.
++    :param input_file: Path to the input shapefile
++    :param buffer_distance: Buffer distance in meters
++    :param output_file_name: Name of the output file to be saved in processed_data
+     """
+-    # Parse command-line arguments
+-    parser = argparse.ArgumentParser(description="Buffer geometries in a shapefile.")
+-    parser.add_argument('--input', required=True, help="Path to the input shapefile")
+-    parser.add_argument('--buffer', required=True, type=float, help="Buffer distance in meters")
+-    parser.add_argument('--output', required=True, help="Path to save the output file")
+-    args = parser.parse_args()
++    output_file = os.path.join(PROCESSED_DATA_DIR, output_file_name)
+ 
+-    input_file = args.input
+-    buffer_distance = args.buffer
+-    output_file = args.output
+-
+-    # Ensure the input file exists
+     if not os.path.exists(input_file):
+-        logging.error(f"Input file does not exist: {input_file}")
+-        return
++        raise FileNotFoundError(f"Input file does not exist: {input_file}")
+ 
+-    try:
+-        # Load geospatial data
+-        logging.info(f"Loading shapefile from: {input_file}")
+-        gdf = gpd.read_file(input_file)
++    logging.info(f"Loading shapefile from: {input_file}")
++    gdf = gpd.read_file(input_file)
+ 
+-        # Ensure CRS is in meters or reproject if needed
+-        gdf = ensure_crs_in_meters(gdf)
+-
+-        # Create the buffer
+-        gdf = create_buffer(gdf, buffer_distance)
++    gdf = ensure_crs_in_meters(gdf)
++    gdf = create_buffer(gdf, buffer_distance)
+ 
+-        # Ensure output directory exists
+-        output_dir = os.path.dirname(output_file)
+-        Path(output_dir).mkdir(parents=True, exist_ok=True)
+-
+-        # Save the resulting buffered geometries
+-        logging.info(f"Saving buffered geometries to: {output_file}")
+-        gdf.to_file(output_file, driver='GPKG')
++    logging.info(f"Saving buffered geometries to: {output_file}")
++    gdf.to_file(output_file, driver='GPKG')
+ 
+-        logging.info("Process completed successfully.")
++    logging.info("Process completed successfully.")
++
++
++def main():
++    """
++    Main function to load a shapefile, buffer geometries, and save the result.
++    """
++    parser = argparse.ArgumentParser(description="Buffer geometries in a shapefile.")
++    parser.add_argument('--input', required=True, help="Path to the input shapefile")
++    parser.add_argument('--buffer', required=True, type=float, help="Buffer distance in meters")
++    parser.add_argument('--output', required=True, help="Name of the output file (to be saved in processed_data)")
++    args = parser.parse_args()
++
++    try:
++        run_buffer_analysis(args.input, args.buffer, args.output)
+     except Exception as e:
+         logging.error(f"An error occurred: {e}", exc_info=True)
+ 
+Index: code/analysis_tools/calculate_centroid.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import os\r\nimport geopandas as gpd\r\nfrom pathlib import Path\r\nfrom pyproj import CRS\r\nimport logging\r\n\r\n# Configure logging\r\nlogging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')\r\n\r\ndef ensure_projected_crs(gdf):\r\n    \"\"\"\r\n    Ensures the GeoDataFrame has a projected CRS. Raises an error if CRS is not defined.\r\n\r\n    Parameters:\r\n        gdf (GeoDataFrame): Input GeoDataFrame.\r\n\r\n    Returns:\r\n        GeoDataFrame: GeoDataFrame with a projected CRS.\r\n    \"\"\"\r\n    if gdf.crs is None:\r\n        raise ValueError(\"The GeoDataFrame does not have a defined CRS.\")\r\n    \r\n    crs = CRS.from_user_input(gdf.crs)\r\n    if not crs.is_projected:\r\n        logging.warning(\"CRS is not projected. Reprojecting to EPSG:3857 (Web Mercator).\")\r\n        gdf = gdf.to_crs(epsg=3857)\r\n    return gdf\r\n\r\ndef calculate_centroids(gdf):\r\n    \"\"\"\r\n    Calculates centroids of polygon geometries in a GeoDataFrame.\r\n\r\n    Parameters:\r\n        gdf (GeoDataFrame): Input GeoDataFrame with polygons.\r\n\r\n    Returns:\r\n        GeoDataFrame: A new GeoDataFrame with centroids.\r\n    \"\"\"\r\n    # Ensure valid polygon geometries\r\n    if not gdf.geometry.is_valid.all():\r\n        raise ValueError(\"Invalid geometries detected. Please validate or fix the geometries before proceeding.\")\r\n    \r\n    if not gdf.geometry.type.isin([\"Polygon\", \"MultiPolygon\"]).all():\r\n        raise ValueError(\"Input GeoDataFrame must contain only Polygon or MultiPolygon geometries.\")\r\n    \r\n    logging.info(\"Calculating centroids for the polygons.\")\r\n    centroids = gdf.geometry.centroid\r\n    \r\n    # Create a GeoDataFrame for centroids\r\n    centroids_gdf = gpd.GeoDataFrame(gdf.drop(columns='geometry'), geometry=centroids, crs=gdf.crs)\r\n    return centroids_gdf\r\n\r\ndef process_centroids(input_file, output_file):\r\n    \"\"\"\r\n    Loads a shapefile, calculates centroids, and saves the result.\r\n\r\n    Parameters:\r\n        input_file (str): Path to the input shapefile.\r\n        output_file (str): Path to save the output file with centroids.\r\n    \"\"\"\r\n    try:\r\n        # Load geospatial data\r\n        logging.info(f\"Loading input file: {input_file}\")\r\n        gdf = gpd.read_file(input_file)\r\n\r\n        # Ensure CRS is projected\r\n        gdf = ensure_projected_crs(gdf)\r\n\r\n        # Calculate centroids\r\n        centroids_gdf = calculate_centroids(gdf)\r\n\r\n        # Save centroids to output file\r\n        logging.info(f\"Saving centroids to: {output_file}\")\r\n        centroids_gdf.to_file(output_file, driver=\"GPKG\")  # Save as GeoPackage\r\n\r\n        logging.info(f\"Centroids successfully calculated and saved to {output_file}.\")\r\n        logging.info(f\"Number of centroids calculated: {len(centroids_gdf)}\")\r\n    except FileNotFoundError:\r\n        logging.error(f\"Input file not found: {input_file}\")\r\n    except Exception as e:\r\n        logging.error(f\"An unexpected error occurred: {e}\", exc_info=True)\r\n\r\ndef main():\r\n    # Define file paths\r\n    input_file = 'processed_data/merged_shapefile.shp'\r\n    output_dir = 'processed_data'\r\n    output_file = os.path.join(output_dir, 'centroids.gpkg')  # Use GeoPackage format\r\n\r\n    # Ensure the output directory exists\r\n    Path(output_dir).mkdir(parents=True, exist_ok=True)\r\n\r\n    # Process centroids\r\n    process_centroids(input_file, output_file)\r\n\r\nif __name__ == \"__main__\":\r\n    main()\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/code/analysis_tools/calculate_centroid.py b/code/analysis_tools/calculate_centroid.py
+--- a/code/analysis_tools/calculate_centroid.py	(revision b981f4501786e14355a459211fed00494e2167fb)
++++ b/code/analysis_tools/calculate_centroid.py	(date 1736869617442)
+@@ -7,6 +7,7 @@
+ # Configure logging
+ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+ 
++
+ def ensure_projected_crs(gdf):
+     """
+     Ensures the GeoDataFrame has a projected CRS. Raises an error if CRS is not defined.
+@@ -19,13 +20,14 @@
+     """
+     if gdf.crs is None:
+         raise ValueError("The GeoDataFrame does not have a defined CRS.")
+-    
++
+     crs = CRS.from_user_input(gdf.crs)
+     if not crs.is_projected:
+         logging.warning("CRS is not projected. Reprojecting to EPSG:3857 (Web Mercator).")
+         gdf = gdf.to_crs(epsg=3857)
+     return gdf
+ 
++
+ def calculate_centroids(gdf):
+     """
+     Calculates centroids of polygon geometries in a GeoDataFrame.
+@@ -36,20 +38,19 @@
+     Returns:
+         GeoDataFrame: A new GeoDataFrame with centroids.
+     """
+-    # Ensure valid polygon geometries
+     if not gdf.geometry.is_valid.all():
+         raise ValueError("Invalid geometries detected. Please validate or fix the geometries before proceeding.")
+-    
++
+     if not gdf.geometry.type.isin(["Polygon", "MultiPolygon"]).all():
+         raise ValueError("Input GeoDataFrame must contain only Polygon or MultiPolygon geometries.")
+-    
++
+     logging.info("Calculating centroids for the polygons.")
+     centroids = gdf.geometry.centroid
+-    
+-    # Create a GeoDataFrame for centroids
++
+     centroids_gdf = gpd.GeoDataFrame(gdf.drop(columns='geometry'), geometry=centroids, crs=gdf.crs)
+     return centroids_gdf
+ 
++
+ def process_centroids(input_file, output_file):
+     """
+     Loads a shapefile, calculates centroids, and saves the result.
+@@ -59,38 +60,55 @@
+         output_file (str): Path to save the output file with centroids.
+     """
+     try:
+-        # Load geospatial data
+         logging.info(f"Loading input file: {input_file}")
+         gdf = gpd.read_file(input_file)
+ 
+-        # Ensure CRS is projected
+         gdf = ensure_projected_crs(gdf)
+-
+-        # Calculate centroids
+         centroids_gdf = calculate_centroids(gdf)
+ 
+-        # Save centroids to output file
+         logging.info(f"Saving centroids to: {output_file}")
+-        centroids_gdf.to_file(output_file, driver="GPKG")  # Save as GeoPackage
++        centroids_gdf.to_file(output_file, driver="GPKG")
+ 
+         logging.info(f"Centroids successfully calculated and saved to {output_file}.")
+-        logging.info(f"Number of centroids calculated: {len(centroids_gdf)}")
+     except FileNotFoundError:
+         logging.error(f"Input file not found: {input_file}")
++        raise
+     except Exception as e:
+         logging.error(f"An unexpected error occurred: {e}", exc_info=True)
++        raise
++
++
++def run_from_gui(input_file, output_file):
++    """
++    Interface for running the centroid process from a GUI.
++
++    Parameters:
++        input_file (str): Path to the input shapefile.
++        output_file (str): Path to save the output file with centroids.
++    """
++    try:
++        process_centroids(input_file, output_file)
++        logging.info("Process completed successfully through GUI.")
++    except Exception as e:
++        logging.error(f"Error while running from GUI: {e}")
++
+ 
+ def main():
+-    # Define file paths
+-    input_file = 'processed_data/merged_shapefile.shp'
+-    output_dir = 'processed_data'
+-    output_file = os.path.join(output_dir, 'centroids.gpkg')  # Use GeoPackage format
++    """
++    Main function to execute centroid calculation via command line.
++    """
++    import argparse
+ 
+-    # Ensure the output directory exists
+-    Path(output_dir).mkdir(parents=True, exist_ok=True)
++    parser = argparse.ArgumentParser(description="Calculate centroids for a shapefile.")
++    parser.add_argument('--input', required=True, help="Path to the input shapefile")
++    parser.add_argument('--output', required=True, help="Path to save the output file with centroids")
++    args = parser.parse_args()
+ 
+-    # Process centroids
+-    process_centroids(input_file, output_file)
++    try:
++        process_centroids(args.input, args.output)
++    except Exception as e:
++        logging.error(f"Error while running from command line: {e}")
++
+ 
+ if __name__ == "__main__":
+     main()
+Index: code/analysis_tools/calculate_distance.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import geopandas as gpd\r\nfrom geopy.distance import geodesic\r\nimport logging\r\n\r\n# Configure logging\r\nlogging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')\r\n\r\ndef ensure_geographic_crs(gdf):\r\n    \"\"\"\r\n    Ensures the GeoDataFrame has a geographic CRS.\r\n\r\n    Parameters:\r\n        gdf (GeoDataFrame): Input GeoDataFrame.\r\n\r\n    Returns:\r\n        GeoDataFrame: GeoDataFrame with a geographic CRS.\r\n    \"\"\"\r\n    if gdf.crs is None:\r\n        raise ValueError(\"The GeoDataFrame does not have a defined CRS.\")\r\n    \r\n    if not gdf.crs.is_geographic:\r\n        raise ValueError(\"The GeoDataFrame CRS is not geographic. Expected a CRS with latitude and longitude (e.g., EPSG:4326).\")\r\n\r\n    return gdf\r\n\r\ndef calculate_distance_between_points(gdf, index1=0, index2=1):\r\n    \"\"\"\r\n    Calculate the geodesic distance between two points in a GeoDataFrame.\r\n\r\n    Parameters:\r\n        gdf (GeoDataFrame): GeoDataFrame containing point geometries.\r\n        index1 (int): Index of the first point.\r\n        index2 (int): Index of the second point.\r\n\r\n    Returns:\r\n        float: Distance between the two points in meters.\r\n    \"\"\"\r\n    try:\r\n        # Ensure the GeoDataFrame contains point geometries\r\n        if not gdf.geometry.type.isin([\"Point\"]).all():\r\n            raise ValueError(\"The GeoDataFrame must contain only point geometries.\")\r\n        \r\n        # Ensure CRS is geographic\r\n        ensure_geographic_crs(gdf)\r\n\r\n        # Validate indices\r\n        if index1 >= len(gdf) or index2 >= len(gdf):\r\n            raise IndexError(\"Indices are out of bounds for the GeoDataFrame.\")\r\n\r\n        # Extract coordinates of the two points\r\n        point1 = gdf.geometry.iloc[index1].coords[0]\r\n        point2 = gdf.geometry.iloc[index2].coords[0]\r\n\r\n        # Log the coordinates being processed\r\n        logging.info(f\"Point 1 coordinates: {point1}\")\r\n        logging.info(f\"Point 2 coordinates: {point2}\")\r\n\r\n        # Calculate geodesic distance\r\n        logging.info(f\"Calculating geodesic distance between points at index {index1} and {index2}.\")\r\n        distance = geodesic(point1, point2).meters\r\n\r\n        logging.info(f\"Distance between points: {distance:.2f} meters\")\r\n        return distance\r\n    except Exception as e:\r\n        logging.error(f\"An error occurred: {e}\")\r\n        return None\r\n\r\ndef main():\r\n    # Define the input file path\r\n    input_file = 'processed_data/points.shp'\r\n\r\n    try:\r\n        # Load the GeoDataFrame\r\n        logging.info(f\"Loading input file: {input_file}\")\r\n        gdf = gpd.read_file(input_file)\r\n\r\n        # Calculate the distance between the first two points\r\n        distance = calculate_distance_between_points(gdf)\r\n\r\n        if distance is not None:\r\n            print(f\"Distance between the first two points: {distance:.2f} meters\")\r\n    except FileNotFoundError:\r\n        logging.error(f\"Input file not found: {input_file}\")\r\n    except Exception as e:\r\n        logging.error(f\"An unexpected error occurred: {e}\")\r\n\r\nif __name__ == \"__main__\":\r\n    main()\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/code/analysis_tools/calculate_distance.py b/code/analysis_tools/calculate_distance.py
+--- a/code/analysis_tools/calculate_distance.py	(revision b981f4501786e14355a459211fed00494e2167fb)
++++ b/code/analysis_tools/calculate_distance.py	(date 1736871901661)
+@@ -1,10 +1,12 @@
+ import geopandas as gpd
+ from geopy.distance import geodesic
+ import logging
++import argparse
+ 
+ # Configure logging
+ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+ 
++
+ def ensure_geographic_crs(gdf):
+     """
+     Ensures the GeoDataFrame has a geographic CRS.
+@@ -17,12 +19,13 @@
+     """
+     if gdf.crs is None:
+         raise ValueError("The GeoDataFrame does not have a defined CRS.")
+-    
++
+     if not gdf.crs.is_geographic:
+         raise ValueError("The GeoDataFrame CRS is not geographic. Expected a CRS with latitude and longitude (e.g., EPSG:4326).")
+ 
+     return gdf
+ 
++
+ def calculate_distance_between_points(gdf, index1=0, index2=1):
+     """
+     Calculate the geodesic distance between two points in a GeoDataFrame.
+@@ -35,54 +38,56 @@
+     Returns:
+         float: Distance between the two points in meters.
+     """
+-    try:
+-        # Ensure the GeoDataFrame contains point geometries
+-        if not gdf.geometry.type.isin(["Point"]).all():
+-            raise ValueError("The GeoDataFrame must contain only point geometries.")
+-        
+-        # Ensure CRS is geographic
+-        ensure_geographic_crs(gdf)
++    # Ensure the GeoDataFrame contains point geometries
++    if not gdf.geometry.type.isin(["Point"]).all():
++        raise ValueError("The GeoDataFrame must contain only point geometries.")
++
++    # Ensure CRS is geographic
++    ensure_geographic_crs(gdf)
+ 
+-        # Validate indices
+-        if index1 >= len(gdf) or index2 >= len(gdf):
+-            raise IndexError("Indices are out of bounds for the GeoDataFrame.")
++    # Validate indices
++    if index1 >= len(gdf) or index2 >= len(gdf):
++        raise IndexError("Indices are out of bounds for the GeoDataFrame.")
+ 
+-        # Extract coordinates of the two points
+-        point1 = gdf.geometry.iloc[index1].coords[0]
+-        point2 = gdf.geometry.iloc[index2].coords[0]
++    # Extract coordinates of the two points
++    point1 = gdf.geometry.iloc[index1].coords[0]
++    point2 = gdf.geometry.iloc[index2].coords[0]
+ 
+-        # Log the coordinates being processed
+-        logging.info(f"Point 1 coordinates: {point1}")
+-        logging.info(f"Point 2 coordinates: {point2}")
++    # Log the coordinates being processed
++    logging.info(f"Point 1 coordinates: {point1}")
++    logging.info(f"Point 2 coordinates: {point2}")
+ 
+-        # Calculate geodesic distance
+-        logging.info(f"Calculating geodesic distance between points at index {index1} and {index2}.")
+-        distance = geodesic(point1, point2).meters
++    # Calculate geodesic distance
++    logging.info(f"Calculating geodesic distance between points at index {index1} and {index2}.")
++    distance = geodesic(point1, point2).meters
+ 
+-        logging.info(f"Distance between points: {distance:.2f} meters")
+-        return distance
+-    except Exception as e:
+-        logging.error(f"An error occurred: {e}")
+-        return None
++    logging.info(f"Distance between points: {distance:.2f} meters")
++    return distance
++
+ 
+ def main():
+-    # Define the input file path
+-    input_file = 'processed_data/points.shp'
++    # Parse command-line arguments
++    parser = argparse.ArgumentParser(description="Calculate the distance between two points in a shapefile.")
++    parser.add_argument("--input", required=True, help="Path to the input shapefile")
++    parser.add_argument("--index1", required=True, type=int, help="Index of the first point")
++    parser.add_argument("--index2", required=True, type=int, help="Index of the second point")
++    args = parser.parse_args()
+ 
+     try:
+         # Load the GeoDataFrame
+-        logging.info(f"Loading input file: {input_file}")
+-        gdf = gpd.read_file(input_file)
++        logging.info(f"Loading input file: {args.input}")
++        gdf = gpd.read_file(args.input)
+ 
+-        # Calculate the distance between the first two points
+-        distance = calculate_distance_between_points(gdf)
++        # Calculate the distance between the two points
++        distance = calculate_distance_between_points(gdf, args.index1, args.index2)
+ 
+         if distance is not None:
+-            print(f"Distance between the first two points: {distance:.2f} meters")
++            print(f"Distance between the points: {distance:.2f} meters")
+     except FileNotFoundError:
+-        logging.error(f"Input file not found: {input_file}")
++        logging.error(f"Input file not found: {args.input}")
+     except Exception as e:
+         logging.error(f"An unexpected error occurred: {e}")
+ 
++
+ if __name__ == "__main__":
+     main()
