@@ -120,6 +120,7 @@ def browse_file(entry):
         entry.insert(0, file_path)
 
 # Automatically resolve paths based on the directory of this script
+# Edit the below to the database location
 BASE_DIR = r"C:\Users\Josh\Documents\GitHub\GEOINT-Database"
 
 SCRIPTS = {
