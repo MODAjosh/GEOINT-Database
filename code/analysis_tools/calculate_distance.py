@@ -1,9 +1,11 @@
 import geopandas as gpd
 from geopy.distance import geodesic
 import logging
+import argparse
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
 
 def ensure_geographic_crs(gdf):
     """
@@ -17,11 +19,12 @@ def ensure_geographic_crs(gdf):
     """
     if gdf.crs is None:
         raise ValueError("The GeoDataFrame does not have a defined CRS.")
-    
+
     if not gdf.crs.is_geographic:
         raise ValueError("The GeoDataFrame CRS is not geographic. Expected a CRS with latitude and longitude (e.g., EPSG:4326).")
 
     return gdf
+
 
 def calculate_distance_between_points(gdf, index1=0, index2=1):
     """
@@ -35,54 +38,56 @@ def calculate_distance_between_points(gdf, index1=0, index2=1):
     Returns:
         float: Distance between the two points in meters.
     """
-    try:
-        # Ensure the GeoDataFrame contains point geometries
-        if not gdf.geometry.type.isin(["Point"]).all():
-            raise ValueError("The GeoDataFrame must contain only point geometries.")
-        
-        # Ensure CRS is geographic
-        ensure_geographic_crs(gdf)
+    # Ensure the GeoDataFrame contains point geometries
+    if not gdf.geometry.type.isin(["Point"]).all():
+        raise ValueError("The GeoDataFrame must contain only point geometries.")
 
-        # Validate indices
-        if index1 >= len(gdf) or index2 >= len(gdf):
-            raise IndexError("Indices are out of bounds for the GeoDataFrame.")
+    # Ensure CRS is geographic
+    ensure_geographic_crs(gdf)
 
-        # Extract coordinates of the two points
-        point1 = gdf.geometry.iloc[index1].coords[0]
-        point2 = gdf.geometry.iloc[index2].coords[0]
+    # Validate indices
+    if index1 >= len(gdf) or index2 >= len(gdf):
+        raise IndexError("Indices are out of bounds for the GeoDataFrame.")
 
-        # Log the coordinates being processed
-        logging.info(f"Point 1 coordinates: {point1}")
-        logging.info(f"Point 2 coordinates: {point2}")
+    # Extract coordinates of the two points
+    point1 = gdf.geometry.iloc[index1].coords[0]
+    point2 = gdf.geometry.iloc[index2].coords[0]
 
-        # Calculate geodesic distance
-        logging.info(f"Calculating geodesic distance between points at index {index1} and {index2}.")
-        distance = geodesic(point1, point2).meters
+    # Log the coordinates being processed
+    logging.info(f"Point 1 coordinates: {point1}")
+    logging.info(f"Point 2 coordinates: {point2}")
 
-        logging.info(f"Distance between points: {distance:.2f} meters")
-        return distance
-    except Exception as e:
-        logging.error(f"An error occurred: {e}")
-        return None
+    # Calculate geodesic distance
+    logging.info(f"Calculating geodesic distance between points at index {index1} and {index2}.")
+    distance = geodesic(point1, point2).meters
+
+    logging.info(f"Distance between points: {distance:.2f} meters")
+    return distance
+
 
 def main():
-    # Define the input file path
-    input_file = 'processed_data/points.shp'
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(description="Calculate the distance between two points in a shapefile.")
+    parser.add_argument("--input", required=True, help="Path to the input shapefile")
+    parser.add_argument("--index1", required=True, type=int, help="Index of the first point")
+    parser.add_argument("--index2", required=True, type=int, help="Index of the second point")
+    args = parser.parse_args()
 
     try:
         # Load the GeoDataFrame
-        logging.info(f"Loading input file: {input_file}")
-        gdf = gpd.read_file(input_file)
+        logging.info(f"Loading input file: {args.input}")
+        gdf = gpd.read_file(args.input)
 
-        # Calculate the distance between the first two points
-        distance = calculate_distance_between_points(gdf)
+        # Calculate the distance between the two points
+        distance = calculate_distance_between_points(gdf, args.index1, args.index2)
 
         if distance is not None:
-            print(f"Distance between the first two points: {distance:.2f} meters")
+            print(f"Distance between the points: {distance:.2f} meters")
     except FileNotFoundError:
-        logging.error(f"Input file not found: {input_file}")
+        logging.error(f"Input file not found: {args.input}")
     except Exception as e:
         logging.error(f"An unexpected error occurred: {e}")
+
 
 if __name__ == "__main__":
     main()
