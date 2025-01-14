@@ -5,9 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3745390c-d31e-418c-a30c-48060f6f092f" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/data/raw_data/example_input.shp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/code/UI_Program/Script_Runner_UI.Vr.008.py" beforeDir="false" afterPath="$PROJECT_DIR$/code/UI_Program/Script_Runner_UI.Vr.008.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/code/analysis_tools/buffer_analysis.py" beforeDir="false" afterPath="$PROJECT_DIR$/code/analysis_tools/buffer_analysis.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/.name" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/GEOINT-Database.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/GEOINT-Database.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/code/UI_Program/Geospatial_Toolkit_README.md" beforeDir="false" afterPath="$PROJECT_DIR$/code/UI_Program/Geospatial_Toolkit_README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/code/data/processed_data/output.gpkg" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -24,25 +26,29 @@
   &quot;associatedIndex&quot;: 5
 }</component>
   <component name="ProjectId" id="2rbj9qWosxaElhHx6kVDoSdwPQH" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Python.Script_Runner_UI.Vr.008.executor": "Run",
-    "Python.scratch_1.executor": "Run",
-    "RunOnceActivity.OpenProjectViewOnStart": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "main",
-    "last_opened_file_path": "C:/Users/Josh/Documents/GitHub/GEOINT-Database/data/raw_data"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Python.Script_Runner_UI.Vr.008.executor&quot;: &quot;Run&quot;,
+    &quot;Python.scratch_1.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/Josh/Documents/GitHub/GEOINT-Database&quot;
   },
-  "keyToStringList": {
-    "com.intellij.ide.scratch.ScratchImplUtil$2/New Scratch File": [
-      "Python"
+  &quot;keyToStringList&quot;: {
+    &quot;com.intellij.ide.scratch.ScratchImplUtil$2/New Scratch File&quot;: [
+      &quot;Python&quot;
     ]
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\Josh\Documents\GitHub\GEOINT-Database\data\raw_data" />

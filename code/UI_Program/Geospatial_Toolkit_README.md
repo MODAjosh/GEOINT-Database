@@ -1,93 +1,105 @@
 # Geospatial Toolkit
 
-## Overview
-The Geospatial Toolkit is a Python-based graphical user interface (GUI) designed to streamline the execution of various geospatial processing tasks. The toolkit is implemented using Tkinter and provides a convenient interface for running geospatial scripts such as buffer analysis, NDVI calculation, and raster clipping.
+The **Geospatial Toolkit** is a Python-based graphical user interface (GUI) application for performing a variety of geospatial analyses. The toolkit is built using `Tkinter` and allows users to run geospatial scripts such as buffer analysis, distance calculations, centroid calculations, and more.
 
 ## Features
-- **Dynamic Script Integration**: Load and execute various geospatial scripts dynamically.
-- **Custom Input Dialogs**: Each script prompts for the necessary input parameters using an intuitive form.
-- **Log Window**: Real-time logging of script execution, including outputs and errors.
-- **Tooltip Support**: Provides detailed tooltips for user inputs and buttons.
+- Perform geospatial analyses with ease using a user-friendly GUI.
+- Supports scripts for:
+  - Buffer Analysis
+  - Calculate Centroid
+  - Calculate Distance
+  - Calculate Slope
+  - Clip Raster/Shapefiles
+  - NDVI Calculations
+  - Spatial Joins
+  - Data Preprocessing (e.g., Merging, Rasterization, Reprojection)
+- Execution logs displayed in the GUI.
+- Tooltips for guiding users through input fields.
 
-## Requirements
-- Python 3.7+
-- Required Python libraries:
-  - `tkinter`
-  - `os`
-  - `subprocess`
-
-## Installation
-1. Clone the repository containing the toolkit and associated scripts.
-   ```bash
-   git clone https://github.com/your-repo/geospatial-toolkit.git
-   ```
-
-2. Install the required dependencies (if not already available):
-   ```bash
-   pip install tk
-   ```
-
-3. Place all geospatial processing scripts in their respective directories under the `code/analysis_tools` or `code/data_preprocessing` folders.
-
-## Usage
-1. Run the main script:
-   ```bash
-   python geospatial_toolkit.py
-   ```
-
-2. The GUI will display a list of available tools. Click on a tool to open its input dialog.
-
-3. Provide the required inputs, such as file paths and parameters, and click **Run Script**.
-
-4. Monitor the log window for real-time updates on the script's execution.
+## Prerequisites
+Before using the toolkit, ensure the following:
+- **Python 3.7+** is installed on your system.
+- Required Python libraries are installed. Run the following command to install dependencies:
+  ```bash
+  pip install tkinter geopandas pyproj argparse
+  ```
 
 ## Directory Structure
+The directory is structured as follows:
 ```
-Geospatial-Toolkit/
+GEOINT-Database/
 ├── code/
 │   ├── analysis_tools/
 │   │   ├── buffer_analysis.py
-│   │   ├── ndvi_calculation.py
-│   │   ├── ...
+│   │   ├── calculate_centroid.py
+│   │   ├── calculate_distance.py
+│   │   └── ...
 │   ├── data_preprocessing/
 │   │   ├── clip_raster_by_polygon.py
-│   │   ├── reproject_raster.py
-│   │   ├── ...
-├── geospatial_toolkit.py
-├── README.md
+│   │   ├── merge_data.py
+│   │   └── ...
+├── data/
+│   ├── processed_data/   # Output files will be saved here
+│   └── ...
+└── README.md
 ```
 
-## Customization
-### Adding New Scripts
-1. Place your new script in the appropriate folder (e.g., `code/analysis_tools`).
-2. Update the `SCRIPTS` dictionary in the `geospatial_toolkit.py` file:
-   ```python
-   SCRIPTS["Your Script Name"] = {
-       "script": os.path.join(BASE_DIR, "code", "analysis_tools", "your_script.py"),
-       "inputs": [
-           {"label": "Input File", "placeholder": "input.shp", "type": "file", "tooltip": "Select the input shapefile."},
-           {"label": "Parameter", "placeholder": "value", "type": "number", "tooltip": "Provide the parameter value."}
-       ]
-   }
+## Usage
+1. Clone the repository to your local machine:
+   ```bash
+   git clone https://github.com/<your-repo>/GEOINT-Database.git
    ```
+2. Navigate to the directory containing the `Geospatial Toolkit` script.
+3. Update the `BASE_DIR` variable in the script to point to the local path of the repository:
+   ```python
+   BASE_DIR = r"C:\Users\<YourUsername>\Documents\GitHub\GEOINT-Database"
+   ```
+4. Run the script:
+   ```bash
+   python geospatial_toolkit.py
+   ```
+5. The GUI will launch. Select a tool from the menu, provide the required inputs, and execute the script.
 
-3. Restart the toolkit to reflect the changes.
+## Input Format
+Each tool requires specific inputs, as described below:
+
+### 1. Buffer Analysis
+- **Input File**: A shapefile (`.shp`) containing geometries.
+- **Buffer Distance**: Distance in meters for the buffer.
+- **Output File**: Path to save the buffered output.
+
+### 2. Calculate Centroid
+- **Input File**: A shapefile (`.shp`) containing polygon geometries.
+- **Output File**: Path to save the centroid output.
+
+### 3. Calculate Distance
+- **Input File**: A shapefile (`.shp`) containing point geometries.
+- **Index of Point A**: The index of the first point (e.g., `0`).
+- **Index of Point B**: The index of the second point (e.g., `1`).
+
+...and more tools as specified in the script.
+
+## Logs
+Execution logs are displayed within the GUI for each tool. Logs include:
+- Inputs provided.
+- Commands executed.
+- Script output (success/errors).
 
 ## Troubleshooting
-### Script File Not Found
-- Ensure the `BASE_DIR` variable in the script correctly points to the directory containing the `code` folder.
-- Confirm the script file exists in the specified folder.
+- **Error: `Script file does not exist`**  
+  Ensure the paths to the script files in the `SCRIPTS` dictionary are correct.
+  
+- **Error: Missing Dependencies**  
+  Ensure all required Python libraries are installed using `pip`.
 
-### Missing Dependencies
-- Verify that all required Python libraries are installed using `pip install`.
-
-### Input Validation Errors
-- Check that all required fields are filled in correctly.
-- Ensure that file paths are valid and accessible.
-
-## Contributing
-Contributions are welcome! Feel free to submit issues or pull requests to enhance the toolkit.
+## Contributions
+Contributions to improve the toolkit are welcome! Fork the repository, make your changes, and submit a pull request.
 
 ## License
-This project is licensed under the MIT License.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
+## Contact
+For any questions or support, reach out to `<Your Contact Email>`.
+
+---
+Happy Mapping!
