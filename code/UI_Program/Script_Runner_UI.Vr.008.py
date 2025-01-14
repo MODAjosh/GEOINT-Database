@@ -3,6 +3,7 @@ from tkinter import messagebox, filedialog, scrolledtext, Toplevel, Label, Entry
 import subprocess
 import os
 
+
 # Tooltip class for Tkinter
 class ToolTip:
     def __init__(self, widget, text):
@@ -25,12 +26,14 @@ class ToolTip:
         if self.tooltip:
             self.tooltip.destroy()
 
+
 # Function to log messages in a ScrolledText widget
 def log_message(log_widget, message):
     log_widget.configure(state="normal")
     log_widget.insert(tk.END, message + "\n")
     log_widget.configure(state="disabled")
     log_widget.yview(tk.END)
+
 
 # Function to validate inputs
 def validate_inputs(inputs, input_types):
@@ -46,9 +49,11 @@ def validate_inputs(inputs, input_types):
             return False
     return True
 
+
 # Function to run a script
 def run_script(script_name, script_info):
     open_input_dialog(script_name, script_info)
+
 
 # Function to create a custom input dialog
 def open_input_dialog(script_name, script_info):
@@ -84,10 +89,13 @@ def open_input_dialog(script_name, script_info):
     log_label = Label(dialog, text="Execution Log", font=("Helvetica", 10, "bold"))
     log_label.grid(row=len(script_info["inputs"]), column=0, columnspan=3, pady=10)
 
-    log_window = scrolledtext.ScrolledText(dialog, wrap=tk.WORD, width=70, height=10, state="disabled", bg="black", fg="white")
+    log_window = scrolledtext.ScrolledText(dialog, wrap=tk.WORD, width=70, height=10, state="disabled", bg="black",
+                                           fg="white")
     log_window.grid(row=len(script_info["inputs"]) + 1, column=0, columnspan=3, pady=5)
 
-    Button(dialog, text="Run Script", command=submit_inputs).grid(row=len(script_info["inputs"]) + 2, columnspan=3, pady=10)
+    Button(dialog, text="Run Script", command=submit_inputs).grid(row=len(script_info["inputs"]) + 2, columnspan=3,
+                                                                  pady=10)
+
 
 # Function to execute the script with user inputs
 def run_script_with_inputs(script_path, inputs, log_widget):
@@ -95,7 +103,12 @@ def run_script_with_inputs(script_path, inputs, log_widget):
         messagebox.showerror("Error", f"The script file '{script_path}' does not exist.")
         return
 
-    args = [f"--{key}={value}" for key, value in inputs.items()]
+    # Format command-line arguments to match the script's expected input
+    args = [
+        f"--input={inputs['Input File']}",
+        f"--buffer={inputs['Buffer Distance']}",
+        f"--output={inputs['Output File']}"
+    ]
     command = ["python", script_path] + args
 
     try:
@@ -119,23 +132,32 @@ def browse_file(entry):
         entry.delete(0, tk.END)
         entry.insert(0, file_path)
 
+
 # Automatically resolve paths based on the directory of this script
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+<<<<<<< Updated upstream
+=======
+# Edit the below to the database location
+>>>>>>> Stashed changes
+BASE_DIR = r"C:\Users\Josh\Documents\GitHub\GEOINT-Database"
 
 SCRIPTS = {
     "Buffer Analysis": {
         "script": os.path.join(BASE_DIR, "code", "analysis_tools", "buffer_analysis.py"),
         "inputs": [
-            {"label": "Input File", "placeholder": "input.shp", "type": "file", "tooltip": "Select the input shapefile."},
+            {"label": "Input File", "placeholder": "input.shp", "type": "file",
+             "tooltip": "Select the input shapefile."},
             {"label": "Buffer Distance", "placeholder": "100", "type": "number", "tooltip": "Enter buffer distance."},
-            {"label": "Output File", "placeholder": "output.shp", "type": "text", "tooltip": "Specify the output file."}
+            {"label": "Output File", "placeholder": "output.gpkg", "type": "text",
+             "tooltip": "Specify the output GeoPackage file."}
         ]
     },
     "Calculate Centroid": {
         "script": os.path.join(BASE_DIR, "code", "analysis_tools", "calculate_centroid.py"),
         "inputs": [
-            {"label": "Input File", "placeholder": "input.shp", "type": "file", "tooltip": "Select the input shapefile."},
-            {"label": "Output File", "placeholder": "output_centroid.shp", "type": "text", "tooltip": "Specify the output file."}
+            {"label": "Input File", "placeholder": "input.shp", "type": "file",
+             "tooltip": "Select the input shapefile."},
+            {"label": "Output File", "placeholder": "output_centroid.shp", "type": "text",
+             "tooltip": "Specify the output file."}
         ]
     },
     "Calculate Distance": {
